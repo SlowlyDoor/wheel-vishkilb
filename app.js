@@ -6,7 +6,6 @@
 
   tg.expand();
   tg.ready();
-  console.log(tg.sendData("test"));
   /* ---------- URL-параметры ---------- */
   const url      = new URL(location.href);
   let   balance  = parseInt(url.searchParams.get('bal')  || '0', 10);

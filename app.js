@@ -132,8 +132,6 @@
     }
 
     tg.sendData(JSON.stringify({ type:'spinResult', stake:currentStake, payout }));
-    // оставьте 500 мс на отправку
-    setTimeout(() => tg.close(), 500);
 
     locked = false;
     btn.disabled = false;

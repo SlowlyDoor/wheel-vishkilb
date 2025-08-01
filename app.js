@@ -4,82 +4,62 @@
   const tg = window.Telegram?.WebApp || { expand(){}, sendData:console.log, showAlert:alert };
   tg.expand();
 
-  /* ---------- параметры URL ---------- */
-  const url       = new URL(location.href);
-  let   balance   = parseInt(url.searchParams.get('bal')  || '0', 10);   // начальный баланс
-  const baseCost  = parseInt(url.searchParams.get('cost') || '1', 10);   // базовая цена спина
+  /* ---------- URL-параметры ---------- */
+  const url      = new URL(location.href);
+  let   balance  = parseInt(url.searchParams.get('bal')  || '0', 10);
+  const baseCost = parseInt(url.searchParams.get('cost') || '1', 10);
 
   /* ---------- DOM ---------- */
-  const balanceEl    = document.getElementById('balance');
-  const stakeInputEl = document.getElementById('stakeInput');
-  const infoEl       = document.getElementById('info');
+  const balEl   = document.getElementById('balance');
+  const stakeEl = document.getElementById('stakeInput');
+  const infoEl  = document.getElementById('info');
 
-  const stake = () => Math.max(1, parseInt(stakeInputEl.value, 10) || 1) * baseCost;
-
-  const refreshUI = () => {
-    balanceEl.textContent = `Баланс: ${isNaN(balance) ? '…' : balance} 🪙`;
-    infoEl.textContent    = `Стоимость спина: ${stake()} 🪙`;
+  const stake = () => Math.max(1, parseInt(stakeEl.value, 10) || 1) * baseCost;
+  const drawUI = () => {
+    balEl.textContent = `Баланс: ${isNaN(balance) ? '…' : balance} 🪙`;
+    infoEl.textContent = `Стоимость спина: ${stake()} 🪙`;
   };
-  refreshUI();
+  drawUI();
 
-  /* ---------- конфигурация колеса ---------- */
-  const segments    = ['0×','2×','0×','2×','0×','2×','55×'];
-  const multipliers = [ 0 ,  2 ,  0 ,  2 ,  0 ,  2 ,  55 ];   // числовые множители
-  const weights     = [200,100,200,100,200,100,1];            // «веса» вероятности
-  const colours     = ['#e91e63','#3f51b5','#2196f3',
-                       '#009688','#9c27b0','#f44336','#ffd700'];
+  /* ---------- колесо ---------- */
+  const segs   = ['0×','2×','0×','2×','0×','2×','55×'];
+  const mult   = [ 0 ,  2 ,  0 ,  2 ,  0 ,  2 ,  55 ];
+  const wght   = [200,100,200,100,200,100,1];
+  const clr    = ['#e91e63','#3f51b5','#2196f3','#009688','#9c27b0','#f44336','#ffd700'];
 
-  const wheel = new Winwheel({
-    canvasId     : 'canvas',
-    numSegments  : segments.length,
-    outerRadius  : 150,
-    pointerAngle : 0,                  // «12 часов»
-    textFontSize : 18,
-    segments     : segments.map((txt,i)=>({ fillStyle: colours[i], text: txt })),
-    animation    : {
-      type            : 'spinToStop',
-      duration        : 8,
-      spins           : 8,
-      callbackFinished: () => {
-        const segIdx = wheel.getIndicatedSegmentNumber() - 1;   // 0-based
-        const prize  = multipliers[segIdx] * currentStake;      // чистый выигрыш
-
-        if (!isNaN(balance)) {
-          balance += prize;             // ставка уже снята заранее
-          refreshUI();
-        }
-
-        tg.sendData(JSON.stringify({
-          type  : 'spinResult',
-          stake : currentStake,
-          payout: prize
-        }));
-      }
+  const wheel  = new Winwheel({
+    canvasId : 'canvas',
+    numSegments : segs.length,
+    outerRadius : 150,
+    pointerAngle: 0,
+    textFontSize: 18,
+    segments    : segs.map((t,i)=>({ fillStyle: clr[i], text: t })),
+    animation   : {
+      type   : 'spinToStop',
+      duration: 8,
+      spins   : 8,
+      callbackFinished: finishSpin
     }
   });
 
-  /* жёлтый указатель рисуем поверх canvas */
+  /* рисуем стрелку-указатель вниз */
   const ctx = document.getElementById('canvas').getContext('2d');
-  function drawPointer() {
+  const drawPointer = () => {
     ctx.save();
     ctx.fillStyle = '#ffeb3b';
     ctx.beginPath();
-    ctx.moveTo(150 - 10, 5);  // левый угол
-    ctx.lineTo(150 + 10, 5);  // правый угол
-    ctx.lineTo(150,      23); // нижняя вершина (стрелка "вниз")
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  }
-  drawPointer();              // первичный вызов
+    ctx.moveTo(140, 5); ctx.lineTo(160, 5); ctx.lineTo(150, 23); ctx.closePath();
+    ctx.fill(); ctx.restore();
+  };
+  drawPointer();
 
-  /* ---------- логика кнопки ---------- */
-  const spinBtn      = document.getElementById('spinBtn');
-  let   currentStake = 1;     // ставка активного спина
+  /* ---------- кнопка ---------- */
+  const btn          = document.getElementById('spinBtn');
+  let   currentStake = 1;
+  let   locked       = false;
 
-  spinBtn.addEventListener('click', () => {
-    if (wheel.animation.spinning) return;            // защита от даблклика
-
+  btn.onclick = () => {
+    if (locked) return;           // уже крутится
     currentStake = stake();
 
     if (!isNaN(balance) && balance < currentStake) {
@@ -87,26 +67,48 @@
       return;
     }
 
-    /* сразу снимаем ставку */
     if (!isNaN(balance)) {
-      balance -= currentStake;
-      refreshUI();
+      balance -= currentStake;    // снимаем ставку сразу
+      drawUI();
     }
 
-    /* сброс состояния колеса, чтобы следующий спин был плавным */
+    locked = true; btn.disabled = true; btn.textContent = 'Крутится…';
+
+    /* сброс колеса */
     wheel.stopAnimation(false);
     wheel.rotationAngle = 0;
     wheel.draw(); drawPointer();
 
-    /* выбираем сектор с учётом весов */
-    const total = weights.reduce((s,w)=>s+w,0);
-    let   rnd   = Math.random()*total, acc=0, idx=0;
-    for (let i=0;i<weights.length;i++){ acc += weights[i]; if (rnd < acc){ idx = i; break; } }
+    /* выбираем сектор по весам */
+    const sum = wght.reduce((s,w)=>s+w,0);
+    let r = Math.random()*sum, acc = 0, idx = 0;
+    for(let i=0;i<wght.length;i++){ acc+=wght[i]; if(r<acc){ idx=i; break; } }
 
-    wheel.animation.stopAngle = wheel.getRandomForSegment(idx + 1);
+    wheel.animation.stopAngle = wheel.getRandomForSegment(idx+1);
     wheel.startAnimation();
-  });
+  };
 
-  /* обновляем стоимость спина при изменении ввода */
-  stakeInputEl.addEventListener('input', refreshUI);
+  stakeEl.addEventListener('input', drawUI);
+
+  /* ---------- callbackFinished ---------- */
+  function finishSpin() {
+    const idx    = wheel.getIndicatedSegmentNumber() - 1;
+    const payout = mult[idx] * currentStake;   // чистый выигрыш (без ставки)
+
+    if (!isNaN(balance)) {
+      balance += payout;
+      drawUI();
+    }
+
+    tg.sendData(JSON.stringify({
+      type  : 'spinResult',
+      stake : currentStake,
+      payout: payout
+    }));
+
+    /* разблокировка */
+    locked = false;
+    btn.disabled = false;
+    btn.textContent = 'Крутить!';
+  }
 })();

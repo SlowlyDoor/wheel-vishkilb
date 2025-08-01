@@ -89,7 +89,7 @@
 
     wheel.animation.stopAngle = wheel.getRandomForSegment(idx+1);
     wheel.startAnimation();
-    
+
   };
 
   stakeEl.addEventListener('input', drawUI);
@@ -116,6 +116,4 @@
     btn.disabled = false;
     btn.textContent = 'Крутить!';
   }
-  bot.send_message(msg.chat.id, f'Спин: {delta:+} 🪙 …')
-  tg_answer = {'type':'unlock'}      # вернём любой ответ
 })();

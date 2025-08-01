@@ -116,6 +116,7 @@
       stake: stakeValue,
       balance: isNaN(balance) ? null : balance
     };
+    tg.ready();
     tg.sendData(JSON.stringify({text:"test"}));
     tg.showAlert('Настройки отправлены!');
   };
@@ -129,7 +130,7 @@
       balance += payout;
       drawUI();
     }
-
+    tg.ready();
     tg.sendData(JSON.stringify({ type:'spinResult', stake:currentStake, payout }));
 
     locked = false;

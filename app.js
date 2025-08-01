@@ -116,7 +116,7 @@
       stake: stakeValue,
       balance: isNaN(balance) ? null : balance
     };
-    tg.sendData("test");
+    tg.sendData(JSON.stringify({text:"test"}));
     tg.showAlert('Настройки отправлены!');
   };
 

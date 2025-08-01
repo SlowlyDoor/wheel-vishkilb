@@ -16,6 +16,7 @@
   const balEl   = document.getElementById('balance');
   const stakeEl = document.getElementById('stakeInput');
   const infoEl  = document.getElementById('info');
+  const saveBtn = document.getElementById('saveBtn');
 
   const stake = () => Math.max(1, parseInt(stakeEl.value, 10) || 1) * baseCost;
   const drawUI = () => {
@@ -61,6 +62,17 @@
   let   currentStake = 1;
   let   locked       = false;
 
+  saveBtn.onclick = () => {
+    const stakeValue = stake();
+    const data = {
+      type: 'saveSettings',
+      stake: stakeValue,
+      balance: isNaN(balance) ? null : balance
+    };
+    tg.sendData(JSON.stringify(data));
+    tg.showAlert('Настройки отправлены!');
+  };
+
   btn.onclick = () => {
     if (locked) return;           // уже крутится
     currentStake = stake();
@@ -96,6 +108,19 @@
   };
 
   stakeEl.addEventListener('input', drawUI);
+
+  /* ---------- Кнопка "Сохранить изменения" ---------- */
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.onclick = () => {
+    const stakeValue = stake();
+    const data = {
+      type: 'saveSettings',
+      stake: stakeValue,
+      balance: isNaN(balance) ? null : balance
+    };
+    tg.sendData(JSON.stringify(data));
+    tg.showAlert('Настройки отправлены!');
+  };
 
   /* ---------- callbackFinished ---------- */
   function finishSpin () {

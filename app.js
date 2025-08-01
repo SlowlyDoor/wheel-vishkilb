@@ -110,7 +110,6 @@
   stakeEl.addEventListener('input', drawUI);
 
   /* ---------- Кнопка "Сохранить изменения" ---------- */
-  const saveBtn = document.getElementById('saveBtn');
   saveBtn.onclick = () => {
     const stakeValue = stake();
     const data = {

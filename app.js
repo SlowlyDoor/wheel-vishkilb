@@ -1,97 +1,112 @@
 /* app.js */
 (() => {
-  /* ---------- helpers ---------- */
-  const tg = window.Telegram?.WebApp || { expand(){}, sendData:console.log };
+  /* ---------- Telegram Web-App ---------- */
+  const tg = window.Telegram?.WebApp || { expand(){}, sendData:console.log, showAlert:alert };
   tg.expand();
 
-  // query-параметры ?bal=### — начальный баланс
-  const params       = new URLSearchParams(location.search);
+  /* ---------- параметры URL ---------- */
+  const url       = new URL(location.href);
+  let   balance   = parseInt(url.searchParams.get('bal')  || '0', 10);   // начальный баланс
+  const baseCost  = parseInt(url.searchParams.get('cost') || '1', 10);   // базовая цена спина
 
+  /* ---------- DOM ---------- */
   const balanceEl    = document.getElementById('balance');
   const stakeInputEl = document.getElementById('stakeInput');
   const infoEl       = document.getElementById('info');
 
-  const urlBal = new URLSearchParams(location.search).get('bal') || 0;
-  let balance = parseInt(urlBal,10);
+  const stake = () => Math.max(1, parseInt(stakeInputEl.value, 10) || 1) * baseCost;
 
   const refreshUI = () => {
-    balanceEl.textContent = `Баланс: ${balance ?? '…'} 🪙`;
+    balanceEl.textContent = `Баланс: ${isNaN(balance) ? '…' : balance} 🪙`;
     infoEl.textContent    = `Стоимость спина: ${stake()} 🪙`;
   };
-  const stake = () => Math.max(1, parseInt(stakeInputEl.value) || 1);
-
   refreshUI();
 
-  /* ---------- wheel config ---------- */
-  const segments = ['0x', '2x', '0x',
-                    '2x', '0x', '2x',
-                    '55x'];
-  const values   = segments.map(s => parseInt(s));          // [0,2,0,2,0,2,55]
-  const weights  = [200,100,200,100,200,100,1];
-  const colours  = ['#f44336','#e91e63','#9c27b0',
-                    '#673ab7','#3f51b5','#2196f3',
-                    '#ffd700'];
+  /* ---------- конфигурация колеса ---------- */
+  const segments    = ['0×','2×','0×','2×','0×','2×','55×'];
+  const multipliers = [ 0 ,  2 ,  0 ,  2 ,  0 ,  2 ,  55 ];   // числовые множители
+  const weights     = [200,100,200,100,200,100,1];            // «веса» вероятности
+  const colours     = ['#e91e63','#3f51b5','#2196f3',
+                       '#009688','#9c27b0','#f44336','#ffd700'];
 
   const wheel = new Winwheel({
-    canvasId    : 'canvas',
-    numSegments : segments.length,
-    pointerAngle: 0,
-    outerRadius : 150,
-    segments    : segments.map((text,i)=>({ fillStyle:colours[i], text })),
-    textFontSize: 18,
-    animation   : {
+    canvasId     : 'canvas',
+    numSegments  : segments.length,
+    outerRadius  : 150,
+    pointerAngle : 0,                  // «12 часов»
+    textFontSize : 18,
+    segments     : segments.map((txt,i)=>({ fillStyle: colours[i], text: txt })),
+    animation    : {
       type            : 'spinToStop',
       duration        : 8,
       spins           : 8,
       callbackFinished: () => {
-        const idx      = wheel.getIndicatedSegmentNumber() - 1;
-        const stakeVal = stake();
+        const segIdx = wheel.getIndicatedSegmentNumber() - 1;   // 0-based
+        const prize  = multipliers[segIdx] * currentStake;      // чистый выигрыш
 
-        /* локально обновляем баланс, если он известен */
-        if (balance !== null) {
-          const prize = values[idx] * stakeVal;
-          balance += prize - stakeVal;        // (-ставка + выигрыш)
-          tg.sendData(JSON.stringify({ 
-            type:'spinResult', stake: stakeValue, payout: payout
-          }));
+        if (!isNaN(balance)) {
+          balance += prize;             // ставка уже снята заранее
           refreshUI();
         }
+
+        tg.sendData(JSON.stringify({
+          type  : 'spinResult',
+          stake : currentStake,
+          payout: prize
+        }));
       }
     }
   });
 
-  /* ---------- spin button ---------- */
-  const btn = document.getElementById('spinBtn');
+  /* жёлтый указатель рисуем поверх canvas */
+  const ctx = document.getElementById('canvas').getContext('2d');
+  function drawPointer() {
+    ctx.save();
+    ctx.fillStyle = '#ffeb3b';
+    ctx.beginPath();
+    ctx.moveTo(150 - 10, 5);  // левый угол
+    ctx.lineTo(150 + 10, 5);  // правый угол
+    ctx.lineTo(150,      23); // нижняя вершина (стрелка "вниз")
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+  drawPointer();              // первичный вызов
 
-  btn.addEventListener('click', () => {
-    if (wheel.animation.spinning) return;          // защита от дабл-клика
+  /* ---------- логика кнопки ---------- */
+  const spinBtn      = document.getElementById('spinBtn');
+  let   currentStake = 1;     // ставка активного спина
 
-    // баланс неизвестен → позволяем крутить; иначе проверяем
-    if (balance !== null && balance < stake()) {
-      tg.showAlert?.('Недостаточно средств');      // если поддерживается
+  spinBtn.addEventListener('click', () => {
+    if (wheel.animation.spinning) return;            // защита от даблклика
+
+    currentStake = stake();
+
+    if (!isNaN(balance) && balance < currentStake) {
+      tg.showAlert('Недостаточно средств');
       return;
     }
 
-    /* сбрасываем колёсо (иначе второй спин «тугой») */
+    /* сразу снимаем ставку */
+    if (!isNaN(balance)) {
+      balance -= currentStake;
+      refreshUI();
+    }
+
+    /* сброс состояния колеса, чтобы следующий спин был плавным */
     wheel.stopAnimation(false);
     wheel.rotationAngle = 0;
-    wheel.draw();
+    wheel.draw(); drawPointer();
 
     /* выбираем сектор с учётом весов */
     const total = weights.reduce((s,w)=>s+w,0);
-    let r       = Math.random()*total, acc=0, idx=0;
-    for (let i=0;i<weights.length;i++){ acc+=weights[i]; if(r<acc){ idx=i; break; } }
+    let   rnd   = Math.random()*total, acc=0, idx=0;
+    for (let i=0;i<weights.length;i++){ acc += weights[i]; if (rnd < acc){ idx = i; break; } }
 
-    /* выставляем целевой угол и запускаем анимацию */
-    wheel.animation.stopAngle = wheel.getRandomForSegment(idx+1);
+    wheel.animation.stopAngle = wheel.getRandomForSegment(idx + 1);
     wheel.startAnimation();
-
-    /* сразу снимаем ставку (если баланс известен) */
-    if (balance !== null) {
-      refreshUI();
-    }
   });
 
-  /* при изменении ставки -- обновляем цену в подписи */
+  /* обновляем стоимость спина при изменении ввода */
   stakeInputEl.addEventListener('input', refreshUI);
 })();

@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Wheel</title>
+<style>
+body{margin:0;font-family:sans-serif;background:#222;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh}
+#canvas{background:#111;border-radius:50%}
+button{margin-top:20px;padding:10px 25px;font-size:18px;border:none;border-radius:8px;background:#29b62c;color:#fff}
+</style>
+</head>
+<body>
+<canvas id="canvas" width="300" height="300"></canvas>
+<button id="spinBtn">Крутить!</button>
+
+<script src="https://cdn.jsdelivr.net/npm/wheel-of-fortune@latest/dist/WheelOfFortune.min.js"></script>
+<script>
+const tg = window.Telegram.WebApp;      // SDK доступен сразу
+tg.expand();                            // разворачиваем на всю высоту
+
+// Сегменты – те же, что в боте
+const segments = ["0 🪙","2 🪙","0 🪙","2 🪙","0 🪙","2 🪙","55 🪙 JACKPOT"];
+const weights  = [200,100,200,100,200,100,1];
+
+const wheel = new WheelOfFortune(document.getElementById("canvas"), {
+    items: segments,
+    colors: ["#f44336","#e91e63","#9c27b0","#673ab7","#3f51b5","#2196f3","#009688"],
+    duration: 5000
+});
+
+document.getElementById("spinBtn").onclick = () => {
+    // Выбираем сектор по весам
+    let total = weights.reduce((a,b)=>a+b,0), r = Math.random()*total, acc=0, idx=0;
+    for(let i=0;i<weights.length;i++){acc+=weights[i]; if(r<acc){idx=i;break;}}
+    wheel.spinToItem(idx).then(()=>{
+        // Посылаем результат в бот
+        tg.sendData(JSON.stringify({type:"spinResult",idx}));
+    });
+};
+</script>
+</body>
+</html>

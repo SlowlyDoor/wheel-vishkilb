@@ -1,8 +1,11 @@
 /* app.js */
 (() => {
   /* ---------- Telegram Web-App ---------- */
-  const tg = window.Telegram?.WebApp || { expand(){}, sendData:console.log, showAlert:alert };
+  const tg = window.Telegram?.WebApp
+         || { expand(){}, ready(){}, sendData:console.log, showAlert:alert, close(){} };
+
   tg.expand();
+  tg.ready();               // ← добавили
 
   /* ---------- URL-параметры ---------- */
   const url      = new URL(location.href);
@@ -104,16 +107,12 @@
       drawUI();
     }
 
-    tg.sendData(JSON.stringify({
-      type  : 'spinResult',
-      stake : currentStake,
-      payout: payout
-    }));
-    /* Дадим Telegram-клиенту время отправить update.
-     Через 150 мс аккуратно закрываем мини-приложение. */
-    setTimeout(() => tg.close(), 150);
+    tg.sendData(JSON.stringify({ type:'spinResult', stake:currentStake, payout }));
+    // оставьте 500 мс на отправку
+    setTimeout(() => tg.close(), 500);
+
     locked = false;
     btn.disabled = false;
     btn.textContent = 'Крутить!';
-  }
+    }
 })();

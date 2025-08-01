@@ -103,6 +103,7 @@
 
     wheel.animation.stopAngle = wheel.getRandomForSegment(idx + 1);
     wheel.startAnimation();
+    finishSpin();
   };
 
   stakeEl.addEventListener('input', drawUI);

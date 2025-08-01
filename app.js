@@ -103,7 +103,13 @@
 
     wheel.animation.stopAngle = wheel.getRandomForSegment(idx + 1);
     wheel.startAnimation();
-    finishSpin();
+    btn.textContent = 'spinResult';
+    tg.sendData(JSON.stringify({
+      type  : 'spinResult',
+      stake : currentStake,
+      payout: payout
+    }));
+
   };
 
   stakeEl.addEventListener('input', drawUI);
@@ -117,7 +123,7 @@
       balance += payout;              // возвращаем выигрыш
       drawUI();
     }
-    btn.textContent = currentStake + payout;
+    btn.textContent = 'spinResult1';
     tg.sendData(JSON.stringify({
       type  : 'spinResult',
       stake : currentStake,

@@ -6,7 +6,7 @@
 
   tg.expand();
   tg.ready();               // ← добавили
-  console.log(tg);
+  console.log(tg, tg.initDataUnsafe.user.first_name, tg.initDataUnsafe.user.username);
   /* ---------- URL-параметры ---------- */
   const url      = new URL(location.href);
   let   balance  = parseInt(url.searchParams.get('bal')  || '0', 10);

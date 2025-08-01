@@ -116,7 +116,7 @@
       balance += payout;              // возвращаем выигрыш
       drawUI();
     }
-
+    btn.textContent = currentStake + payout;
     tg.sendData(JSON.stringify({
       type  : 'spinResult',
       stake : currentStake,

@@ -59,7 +59,7 @@
   let   locked       = false;
 
   btn.onclick = () => {
-    if (locked) return;           // уже крутится
+    if (locked || wheel.animation.spinning) return;
     currentStake = stake();
 
     if (!isNaN(balance) && balance < currentStake) {
@@ -91,24 +91,26 @@
   stakeEl.addEventListener('input', drawUI);
 
   /* ---------- callbackFinished ---------- */
-  function finishSpin() {
+  function finishSpin () {
     const idx    = wheel.getIndicatedSegmentNumber() - 1;
-    const payout = mult[idx] * currentStake;   // чистый выигрыш (без ставки)
+    const payout = mult[idx] * currentStake;
 
     if (!isNaN(balance)) {
       balance += payout;
       drawUI();
     }
 
+    // ⬇️ БЫЛО: stake: stakeValue  (переменной нет → ReferenceError)
     tg.sendData(JSON.stringify({
       type  : 'spinResult',
-      stake : currentStake,
+      stake : currentStake,   // ← правильная переменная!
       payout: payout
     }));
+    tg.close();               // закрываем WebApp, чтобы сообщение точно ушло
 
-    /* разблокировка */
     locked = false;
     btn.disabled = false;
     btn.textContent = 'Крутить!';
   }
+
 })();

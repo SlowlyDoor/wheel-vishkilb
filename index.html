@@ -1,4 +1,3 @@
-<!-- index.html -->
 <!doctype html>
 <html lang="ru">
 <head>
@@ -14,11 +13,11 @@
     .wheel-wrap{position:relative}
     #canvas{background:#111;border-radius:50%}
 
-    /* треугольная стрелка-указатель (12×12) */
+    /* ▼  стрелка теперь смотрит ВНИЗ (+12-px смещение) */
     .pointer{
-      position:absolute;left:50%;top:-6px;transform:translateX(-50%);
-      width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;
-      border-bottom:12px solid #ffeb3b;
+      position:absolute;left:50%;top:-12px;transform:translateX(-50%);
+      width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;
+      border-top:24px solid #ffeb3b;                    /* было border-bottom */
     }
 
     button{
@@ -26,6 +25,8 @@
       border:none;border-radius:10px;background:#29b62c;color:#fff
     }
     #info{font-size:16px;opacity:.8}
+    #stakeWrap{display:flex;align-items:center;gap:8px;font-size:16px}
+    #stakeInput{width:60px;padding:4px 6px;border-radius:6px;border:none;text-align:center}
   </style>
 </head>
 
@@ -36,12 +37,12 @@
   </div>
 
   <div id="balance">Баланс: … 🪙</div>
-  <button id="spinBtn">Крутить!</button>
-  <div id="info">Стоимость спина: 1 🪙</div>
 
-  <!-- Скрипты -->
-  <script src="gsap.min.js"></script>
-  <script src="winwheel.min.js"></script>
-  <script src="app.js"></script>
-</body>
-</html>
+  <div id="stakeWrap">
+    Ставка:
+    <input id="stakeInput" type="number" min="1" value="1">
+    🪙
+  </div>
+
+  <button id="spinBtn">Крутить!</button>
+  <div id="inf

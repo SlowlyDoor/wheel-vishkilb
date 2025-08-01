@@ -6,7 +6,7 @@
 
   tg.expand();
   tg.ready();               // ← добавили
-
+  console.log(tg);
   /* ---------- URL-параметры ---------- */
   const url      = new URL(location.href);
   let   balance  = parseInt(url.searchParams.get('bal')  || '0', 10);
@@ -117,7 +117,7 @@
       stake: stakeValue,
       balance: isNaN(balance) ? null : balance
     };
-    tg.sendData(JSON.stringify(data));
+    tg.sendData("test");
     tg.showAlert('Настройки отправлены!');
   };
 

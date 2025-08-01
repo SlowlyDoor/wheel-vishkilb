@@ -22,14 +22,14 @@
   refreshUI();
 
   /* ---------- wheel config ---------- */
-  const segments = ['0 🪙', '2 🪙', '0 🪙',
-                    '2 🪙', '0 🪙', '2 🪙',
-                    '55 🪙 JACKPOT'];
+  const segments = ['0x', '2x', '0x',
+                    '2x', '0x', '2x',
+                    '55x'];
   const values   = segments.map(s => parseInt(s));          // [0,2,0,2,0,2,55]
   const weights  = [200,100,200,100,200,100,1];
   const colours  = ['#f44336','#e91e63','#9c27b0',
                     '#673ab7','#3f51b5','#2196f3',
-                    '#009688'];
+                    '#ffd700'];
 
   const wheel = new Winwheel({
     canvasId    : 'canvas',
@@ -50,7 +50,7 @@
         /* локально обновляем баланс, если он известен */
         if (balance !== null) {
           const prize = values[idx] * stakeVal;
-          balance += prize - stakeVal;        // (-ставка + выигрыш)
+          balance += prize;        // (-ставка + выигрыш)
           refreshUI();
         }
       }

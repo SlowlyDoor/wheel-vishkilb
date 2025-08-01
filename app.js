@@ -6,12 +6,13 @@
 
   // query-параметры ?bal=### — начальный баланс
   const params       = new URLSearchParams(location.search);
-  let balance        = parseInt(params.get('bal'));   // undefined  → NaN
-  if (isNaN(balance)) balance = null;                 // «неизвестно»
 
   const balanceEl    = document.getElementById('balance');
   const stakeInputEl = document.getElementById('stakeInput');
   const infoEl       = document.getElementById('info');
+
+  const urlBal = new URLSearchParams(location.search).get('bal') || 0;
+  let balance = parseInt(urlBal,10);
 
   const refreshUI = () => {
     balanceEl.textContent = `Баланс: ${balance ?? '…'} 🪙`;
@@ -45,12 +46,14 @@
       callbackFinished: () => {
         const idx      = wheel.getIndicatedSegmentNumber() - 1;
         const stakeVal = stake();
-        tg.sendData(JSON.stringify({ type:'spinResult', idx, stake:stakeVal }));
 
         /* локально обновляем баланс, если он известен */
         if (balance !== null) {
           const prize = values[idx] * stakeVal;
-          balance += prize;        // (-ставка + выигрыш)
+          balance += prize - stakeVal;        // (-ставка + выигрыш)
+          tg.sendData(JSON.stringify({ 
+            type:'spinResult', stake: stakeValue, payout: payout
+          }));
           refreshUI();
         }
       }
@@ -85,7 +88,6 @@
 
     /* сразу снимаем ставку (если баланс известен) */
     if (balance !== null) {
-      balance -= stake();
       refreshUI();
     }
   });

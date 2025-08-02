@@ -95,7 +95,11 @@
     if(balance<curStake){tg.showAlert('Недостаточно средств');return;}
     balance-=curStake;draw();
 
-    {'wheel':startWheel,'coin':flipCoin,'dice':rollDice}[gameSel.value]();
+    switch (gameSel.value) {
+      case 'wheel': startWheel();  break;
+      case 'coin' : flipCoin();    break;
+      case 'dice' : rollDice();    break;
+    } 
   };
 
   /* ---------- финализировать раунд ---------- */

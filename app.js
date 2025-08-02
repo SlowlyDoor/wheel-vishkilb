@@ -6,7 +6,7 @@
   tg.expand(); tg.ready();
 
   /* --- ADMIN: замените на свой Telegram-ID --- */
-  const ADMIN_ID = 123456789;                 // ← сюда ваш id
+  const ADMIN_ID = 1607646782;                 // ← сюда ваш id
   const userId   = tg.initDataUnsafe?.user?.id || null;
   const isAdmin  = userId === ADMIN_ID;
 

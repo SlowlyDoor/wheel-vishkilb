@@ -3,50 +3,104 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Lucky Spin Widget</title>
+  <title>Casino Widget</title>
 
+  <!-- шрифт -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
-    /* ---- базовый фон ---- */
-    html,body{height:100%;margin:0;font-family:Roboto,sans-serif;background:#11082b;color:#eee;
-              display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px}
+    /* ===== базовый фон / текст ===== */
+    html,body{height:100%;margin:0;font-family:'Roboto',sans-serif}
+    body{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+      background:#11082b;overflow:hidden;color:#eee;
+      background-image:
+        radial-gradient(circle at 50% 30%,rgba(255,255,255,.05) 0%,transparent 60%),
+        radial-gradient(circle at 50% 130%,rgba(255,0,140,.25) 0%,transparent 60%);
+    }
     h3{font-size:26px;font-weight:700;text-shadow:0 0 10px #fff}
 
-    /* ---- универсальная «стеклянная» панель ---- */
-    .panel{background:rgba(255,255,255,.05);backdrop-filter:blur(4px);
-           border:1px solid rgba(255,255,255,.08);border-radius:18px;
-           padding:24px 28px;box-shadow:0 0 18px #0006 inset}
+    /* ===== универсальная «стеклянная» панель ===== */
+    .panel{
+      background:rgba(255,255,255,.04);backdrop-filter:blur(4px);
+      border:1px solid rgba(255,255,255,.06);border-radius:18px;
+      padding:24px 28px;box-shadow:0 0 20px #000a,0 0 40px #0005 inset;
+    }
 
-    /* ---- кнопки / ввод ---- */
-    .btn{background:#d400ff;border:none;border-radius:50px;padding:12px 46px;
-         font-size:18px;font-weight:700;color:#fff;cursor:pointer}
-    select,input[type=number]{background:#190f3d;border:2px solid #ffea00;border-radius:10px;
-                               color:#ffea00;font-weight:700;padding:6px 10px}
-    .game{display:none;flex-direction:column;align-items:center;gap:18px}
+    /* ===== селектор игры ===== */
+    #gameSelect{
+      appearance:none;cursor:pointer;font-size:18px;font-weight:700;color:#ffea00;
+      background:#190f3d;border:2px solid #ffea00;border-radius:12px;
+      padding:10px 44px 10px 16px;box-shadow:0 0 12px #ffea00,0 0 16px #fbc02d inset;
+    }
+
+    /* ===== кнопки ===== */
+    .btn{
+      background:#d400ff;border:none;border-radius:50px;padding:14px 60px;
+      font-size:22px;font-weight:700;color:#fff;cursor:pointer;
+      text-shadow:0 0 6px #fff;box-shadow:0 0 12px #d400ff,0 0 20px #d400ff inset;
+      transition:transform .1s;
+    }
+    .btn:active{transform:scale(.95)}
+
+    /* ===== блок баланса / ставки ===== */
+    #infoWrap{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+    #balance,#stakeWrap{font-size:18px;color:#ffea00;text-shadow:0 0 6px #ffea00}
+
+    /* поле ставки с +/- */
+    .stakeBox{
+      display:inline-flex;align-items:center;border:2px solid #ffea00;
+      border-radius:12px;overflow:hidden;background:#190f3d;
+    }
+    #stakeInput{
+      width:60px;padding:6px 8px;font-size:18px;font-weight:700;text-align:center;
+      background:none;border:none;color:#ffea00;outline:none;
+    }
+    .stakeBtn{
+      width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+      cursor:pointer;background:#ffea00;color:#190f3d;font-weight:700;font-size:20px;
+      user-select:none;
+    }
+    .stakeBtn:active{filter:brightness(.9)}
+
+    /* ===== контейнеры игр ===== */
+    .game{display:none;flex-direction:column;align-items:center;gap:20px}
     .game.active{display:flex}
 
-    /* колесо */
-    #canvas{background:#000;border-radius:50%;box-shadow:0 0 24px #ffea00 inset,0 0 30px #d400ff}
-    .pointer{position:absolute;left:50%;top:-18px;transform:translateX(-50%);
-             width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;
-             border-top:28px solid #ffea00;filter:drop-shadow(0 0 6px #ffea00)}
+    /* ---------- Wheel ---------- */
+    #canvas{background:#000;border-radius:50%;box-shadow:0 0 25px #ffea00 inset,0 0 30px #d400ff}
+    .pointer{
+      position:absolute;left:50%;top:-18px;transform:translateX(-50%);
+      width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;
+      border-top:28px solid #ffea00;filter:drop-shadow(0 0 6px #ffea00);
+    }
 
-    /* apple */
+    /* ---------- Apple of Fortune ---------- */
     #appleField{display:grid;grid-template-columns:repeat(5,60px);gap:10px}
-    .cell{width:60px;height:60px;font-size:38px;border-radius:14px;display:flex;
-          align-items:center;justify-content:center;background:#190f3d;cursor:pointer;
-          box-shadow:0 0 4px #ffea00 inset}
+    .cell{
+      width:60px;height:60px;display:flex;align-items:center;justify-content:center;
+      font-size:38px;border-radius:14px;cursor:pointer;
+      background:#190f3d;box-shadow:0 0 4px #ffea00 inset;
+    }
     .cell.open{cursor:default}
 
-    /* crash */
+    #bombPick{
+      appearance:none;background:#190f3d;border:2px solid #ffea00;border-radius:12px;
+      color:#ffea00;font-weight:700;padding:6px 10px;margin-left:6px;cursor:pointer;
+    }
+
+    /* ---------- Crash ---------- */
     #crashScreen{font-size:48px;font-weight:700;color:#ffea00;text-shadow:0 0 12px #ffea00}
 
-    /* settings */
-    #settingsPanel label{display:flex;flex-direction:column;font-size:14px;gap:4px}
-    #saveStatus{font-size:14px;color:#0f0;display:none}
+    /* ---------- Панель подкрутки ---------- */
+    #adminPanel select{
+      appearance:none;background:#190f3d;border:2px solid #ffea00;border-radius:10px;
+      color:#ffea00;font-weight:700;padding:6px 10px;cursor:pointer;
+    }
   </style>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
 
@@ -60,7 +114,7 @@
   </select>
 
   <!-- ===== Wheel ===== -->
-  <div id="wheelGame" class="game panel active">
+  <div id="wheelGame" class="game panel">
     <div style="position:relative">
       <canvas id="canvas" width="320" height="320"></canvas>
       <div class="pointer"></div>
@@ -80,28 +134,29 @@
     <button id="crashCashBtn" class="btn" style="display:none">Забрать</button>
   </div>
 
-  <!-- ===== Админ-панель (покажется только админу) ===== -->
-  <div id="settingsPanel" class="panel" style="display:none;flex-direction:column;gap:14px;max-width:320px">
-    <b>⚙️ Настройки (только админ)</b>
+  <!-- ===== админ-панель (display:none → покажем только админу) ===== -->
+  <div id="settingsPanel" class="panel" style="display:none;flex-direction:column;gap:14px;max-width:340px">
+    <b>⚙️ Настройки (видит только админ)</b>
 
-    <label>Вес сектора 55×: <input id="w55" type="number" min="1"></label>
-    <label>Доп. червяки (appleRig): <input id="rig" type="number" min="0"></label>
-    <label>Crash максимальный X: <input id="cmax" type="number" step="0.1"></label>
+    <label>Вес сектора 55×: <input id="w55" type="number" min="1" value="1"></label>
+    <label>Доп. червяков (appleRig): <input id="rig" type="number" min="0" value="3"></label>
+    <label>Crash max X: <input id="cmax" type="number" step="0.1" value="5"></label>
 
     <button id="saveBtn" class="btn">💾 Сохранить</button>
-    <span id="saveStatus">Сохранено ✓</span>
+    <span id="saveStatus" style="font-size:14px;color:#0f0;display:none">Сохранено ✓</span>
   </div>
 
   <!-- баланс / ставка -->
   <div id="infoWrap" class="panel">
-    Баланс: <span id="balance">…</span> 🪙 | 
-    Ставка: <input id="stakeInp" type="number" min="1" value="1" style="width:70px"> 🪙
+    Баланс: <span id="balance">…</span> 🪙 |
+    Ставка: <input id="stakeInput" type="number" min="1" value="1" style="width:60px"> 🪙
   </div>
 
   <button id="actionBtn" class="btn">Играть!</button>
 
+  <!-- скрипты -->
   <script src="gsap.min.js"></script>
   <script src="winwheel.min.js"></script>
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=1"></script>
 </body>
 </html>

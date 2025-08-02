@@ -1,5 +1,17 @@
 /* ===== Casino Widget logic (Wheel + Apple of Fortune + Crash) ===== */
 (() => {
+    const CONFIG = {
+    /* --- WHEEL ---                0×  2×  0×  5×  0×  3×  10× 55× */
+    wheelWeights : [200, 50, 200, 40, 200, 30,  5 ,  1], // чем больше число — тем чаще сектор
+    /* --- APPLE OF FORTUNE --- */
+    appleBombs   : 5,          // 1-24 «червяков» на поле 5×5
+    /* --- CRASH --- */
+    crashMin     : 1.5,        // старт/минимальный возможный крэш
+    crashMax     : 5.0,        // максимальный, до которого точно успеет дорасти
+    crashStep    : 0.05,       // прирост коэффициента за тик
+    crashInterval: 200         // тик (мс)
+  };
+
   /* --- Telegram Web-App helpers --- */
   const tg = window.Telegram?.WebApp || {expand(){},ready(){},sendData:console.log,showAlert:alert};
   tg.expand(); tg.ready();
@@ -16,20 +28,7 @@
   const gameSel   = $('gameSelect');
   const actionBtn = $('actionBtn');
 
-  /* ===== Casino Widget logic (вероятности в CONFIG) ===== */
-(() => {
-  const CONFIG = {
-    /* --- WHEEL ---                0×  2×  0×  5×  0×  3×  10× 55× */
-    wheelWeights : [200, 50, 200, 40, 200, 30,  5 ,  1], // чем больше число — тем чаще сектор
-    /* --- APPLE OF FORTUNE --- */
-    appleBombs   : 5,          // 1-24 «червяков» на поле 5×5
-    /* --- CRASH --- */
-    crashMin     : 1.5,        // старт/минимальный возможный крэш
-    crashMax     : 5.0,        // максимальный, до которого точно успеет дорасти
-    crashStep    : 0.05,       // прирост коэффициента за тик
-    crashInterval: 200         // тик (мс)
-  };
-
+  
   const views = {wheel:$('wheelGame'), apple:$('appleGame'), crash:$('crashGame')};
 
   /* --- helpers --- */

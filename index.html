@@ -95,6 +95,20 @@
     </div>
   </div>
 
+  <!-- ===== ADMIN PANEL (видна только владельцу ADMIN_ID) ===== -->
+  <div id="adminPanel" class="panel" style="display:none;flex-direction:column;gap:10px">
+    <b>⚙️ Подкрутка рулетки</b>
+
+    <label style="display:flex;align-items:center;gap:8px">
+      Выпадет сектор:
+      <select id="forceSeg">
+        <option value="">Случайно</option>
+        <!-- JS заполнит вариантами 0×-55× -->
+      </select>
+    </label>
+  </div>
+
+
   <!-- Apple -->
   <div id="appleGame" class="game panel">
     <div>

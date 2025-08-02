@@ -19,6 +19,10 @@
   const tg = window.Telegram?.WebApp || {expand(){},ready(){},sendData:console.log,showAlert:alert};
   tg.expand(); tg.ready();
 
+  const ADMIN_ID = 1607646782;          // ← замените на свой Telegram-ID
+  const userId   = tg.initDataUnsafe?.user?.id || null;
+  const isAdmin  = userId === ADMIN_ID;
+
   /* ---------- DOM ---------- */
   const $ = id => document.getElementById(id);
   const stakeInp  = $('stakeInput');
@@ -63,6 +67,16 @@
    * 1) WHEEL                                                              *
    * ===================================================================== */
   const labels=['0×','2×','0×','5×','0×','3×','10×','55×'];
+  /* если Вы админ – делаем панель видимой и заполняем <select> */
+  if (isAdmin) {
+    $('#adminPanel').style.display = 'flex';
+    const sel = $('#forceSeg');
+    labels.forEach((txt, idx) => {
+      const o = document.createElement('option');
+      o.value = idx; o.textContent = txt;
+      sel.appendChild(o);
+    });
+  }
   const mult  =[ 0  , 2  , 0  , 5 , 0  , 3 , 10 , 55 ];
   const colors=['#d400ff','#ffea00','#d400ff','#ffea00','#d400ff',
                 '#ffea00','#d400ff','#ffea00'];
@@ -92,8 +106,10 @@
   function startWheel(){
     disablePlay('Крутится…');
     wheel.stopAnimation(false);wheel.rotationAngle=0;wheel.draw();drawPointer();
-    const stopSeg = pickByWeight(CONFIG.wheelWeights)+1;
-    wheel.animation.stopAngle = wheel.getRandomForSegment(stopSeg);
+    const forced = isAdmin ? $('#forceSeg').value : '';
+    const stopSeg = forced !== ''
+          ? (+forced + 1)                              // админ задал сектор (0-индекс → 1-индекс)
+          : pickByWeight(CONFIG.wheelWeights) + 1;     // обычный случай    wheel.animation.stopAngle = wheel.getRandomForSegment(stopSeg);
     wheel.startAnimation();
   }
   function onWheelStop(){
@@ -106,14 +122,22 @@
    * ===================================================================== */
   const field   = $('appleField');
   const cashBtn = $('appleCashBtn');
-  let apples=[], bombsReal=new Set(), bombsShown=0, opened=0, appleMul=1;
-
+  let apples=[], bombsReal=new Set(), bombsDisplay=new Set(), bombsShown=0, opened=0, appleMul=1;
   function prepareApple(){
-    field.innerHTML='';apples=[];bombsReal.clear();opened=0;appleMul=1;
-    bombsShown = +bombPick.value;                       // то, что видит игрок
-    const targetBombs = Math.min(24,bombsShown+CONFIG.appleRig); // реальное
-    while(bombsReal.size<targetBombs) bombsReal.add(Math.floor(Math.random()*25));
+    field.innerHTML='';
+    apples=[]; bombsReal.clear(); bombsDisplay.clear();
+    opened=0; appleMul=1;
 
+    bombsShown = +bombPick.value;                                  // видимое кол-во
+    const targetBombs = Math.min(24, bombsShown + CONFIG.appleRig);// реальное кол-во
+
+    /* --- распределяем бомбы --- */
+    while (bombsReal.size < targetBombs)         
+      bombsReal.add(Math.floor(Math.random()*25));
+
+    // выбираем, какие из них игрок увидит при проигрыше
+    const shuffled = [...bombsReal].sort(() => 0.5 - Math.random());
+    bombsDisplay = new Set(shuffled.slice(0, bombsShown));
     cashBtn.style.display='none';cashBtn.textContent='Забрать ×1.00';
 
     for(let i=0;i<25;i++){
@@ -129,16 +153,21 @@
 
     apples[idx].classList.add('open');
 
-    if(bombsReal.has(idx)){                 // проиграли
-      apples[idx].textContent='🐛';
-      gsap.to(apples[idx],{scale:1.2,yoyo:true,repeat:3,duration:0.15});
+    if (bombsReal.has(idx)) {               // ► проиграли
+      /* ▸ гарантируем, что увидим ровно bombsShown штук */
+      if (!bombsDisplay.has(idx)) {         // «лишняя» бомба спровоцировала поражение
+        // заменяем случайную из отображаемых
+        const [first] = bombsDisplay;       // берём любой
+        bombsDisplay.delete(first);
+        bombsDisplay.add(idx);
+      }
 
-      /* ► раскрываем ВСЕ червяков */
-      bombsReal.forEach(i=>{
-        if(!apples[i].classList.contains('open')){
-          apples[i].classList.add('open');apples[i].textContent='🐛';
-        }
+      bombsDisplay.forEach(i=>{
+        apples[i].classList.add('open');
+        apples[i].textContent = '🐛';
       });
+
+      gsap.to(apples[idx], {scale:1.2,yoyo:true,repeat:3,duration:0.15});
       cashBtn.style.display='none';
       setTimeout(()=>finishRound(0,'appleLoss'),600);
       return;

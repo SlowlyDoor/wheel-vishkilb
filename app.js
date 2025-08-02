@@ -6,7 +6,7 @@
   tg.expand(); tg.ready();
 
   // --- кто админ --------------------------------------------------------
-  const ADMIN_ID = 123456789;              // ← замените на свой Telegram-ID
+  const ADMIN_ID = 1607646782;              // ← замените на свой Telegram-ID
   const isAdmin  = (tg.initDataUnsafe?.user?.id || 0) === ADMIN_ID;
 
   // --- конфиг приходит base64 в ?cfg= ----------------------------------

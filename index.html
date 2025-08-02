@@ -3,28 +3,37 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Колесо удачи</title>
+  <title>Игровой виджет</title>
 
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%;width:100%;background:#222;font-family:sans-serif;color:#fff}
-    body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+    body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
 
+    /* ▼ общее для блоков игр */
+    .game{display:none;flex-direction:column;align-items:center;gap:12px}
+    .game.active{display:flex}
+
+    /* ▼ колесо */
     .wheel-wrap{position:relative}
     #canvas{background:#111;border-radius:50%}
-
-    /* ▼  стрелка теперь смотрит ВНИЗ (+12-px смещение) */
     .pointer{
       position:absolute;left:50%;top:-12px;transform:translateX(-50%);
       width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;
-      border-top:24px solid #ffeb3b;                    /* было border-bottom */
+      border-top:24px solid #ffeb3b;
     }
 
+    /* ▼ монетка */
+    #coin{font-size:100px;transition:transform .6s}
+    .flip{transform:rotateY(540deg)}
+
+    /* ▼ кубик */
+    #dice{font-size:100px;transform-style:preserve-3d;transition:transform 1s}
+
     button{
-      margin-top:8px;padding:12px 32px;font-size:18px;cursor:pointer;
-      border:none;border-radius:10px;background:#29b62c;color:#fff
+      padding:12px 32px;font-size:18px;border:none;border-radius:10px;
+      background:#29b62c;color:#fff;cursor:pointer
     }
-    #info{font-size:16px;opacity:.8}
     #stakeWrap{display:flex;align-items:center;gap:8px;font-size:16px}
     #stakeInput{width:60px;padding:4px 6px;border-radius:6px;border:none;text-align:center}
   </style>
@@ -32,27 +41,47 @@
 </head>
 
 <body>
-  <div class="wheel-wrap">
-    <canvas id="canvas" width="300" height="300"></canvas>
-    <div class="pointer"></div>
+  <!-- ---------- выбор игры ---------- -->
+  <select id="gameSelect">
+    <option value="wheel">Колесо фортуны</option>
+    <option value="coin">Монетка</option>
+    <option value="dice">Кубик</option>
+  </select>
+
+  <!-- ---------- игры ---------- -->
+
+  <!-- 1) Колесо -->
+  <div id="wheelGame" class="game active">
+    <div class="wheel-wrap">
+      <canvas id="canvas" width="300" height="300"></canvas>
+      <div class="pointer"></div>
+    </div>
+    <div id="infoWheel"></div>
   </div>
 
+  <!-- 2) Монетка -->
+  <div id="coinGame" class="game">
+    <div id="coin">🪙</div>
+    <div id="infoCoin"></div>
+  </div>
+
+  <!-- 3) Кубик -->
+  <div id="diceGame" class="game">
+    <div id="dice">🎲</div>
+    <div id="infoDice"></div>
+  </div>
+
+  <!-- ---------- баланс / ставка ---------- -->
   <div id="balance">Баланс: … 🪙</div>
-
   <div id="stakeWrap">
-    Ставка:
-    <input id="stakeInput" type="number" min="1" value="1">
-    🪙
+    Ставка:<input id="stakeInput" type="number" min="1" value="1"> 🪙
   </div>
 
-  <button id="spinBtn">Крутить!</button>
-  <div id="info">Стоимость спина: 1 🪙</div>
+  <button id="actionBtn">Играть!</button>
 
-  <!-- Скрипты -->
-
+  <!-- ---------- скрипты ---------- -->
   <script src="gsap.min.js"></script>
   <script src="winwheel.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -5,72 +5,95 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Casino Widget</title>
 
+  <!-- шрифт -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
-    /* === базовый фон === */
+    /* ==== общий фон / текст ==== */
     html,body{height:100%;margin:0;font-family:'Roboto',sans-serif}
-    body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
-         background:#11082b;overflow:hidden;color:#eee;
-         background-image:
-           radial-gradient(circle at 50% 30%,rgba(255,255,255,.05) 0%,transparent 60%),
-           radial-gradient(circle at 50% 130%,rgba(255,0,140,.25) 0%,transparent 60%)}
-
-    .panel{background:rgba(255,255,255,.04);backdrop-filter:blur(4px);
-           border:1px solid rgba(255,255,255,.06);border-radius:18px;
-           padding:24px 28px;box-shadow:0 0 20px #000a,0 0 40px #0005 inset}
-
+    body{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+      background:#11082b;overflow:hidden;color:#eee;
+      background-image:
+        radial-gradient(circle at 50% 30%,rgba(255,255,255,.05) 0%,transparent 60%),
+        radial-gradient(circle at 50% 130%,rgba(255,0,140,.25) 0%,transparent 60%);
+    }
     h3{font-size:26px;font-weight:700;text-shadow:0 0 10px #fff}
 
-    /* === селектор игры === */
-    #gameSelect{appearance:none;cursor:pointer;font-size:18px;font-weight:700;color:#ffea00;
-                background:#190f3d;border:2px solid #ffea00;border-radius:12px;
-                padding:10px 44px 10px 16px;box-shadow:0 0 12px #ffea00,0 0 16px #fbc02d inset}
+    /* ==== панели ==== */
+    .panel{
+      background:rgba(255,255,255,.04);backdrop-filter:blur(4px);
+      border:1px solid rgba(255,255,255,.06);border-radius:18px;
+      padding:24px 28px;box-shadow:0 0 20px #000a,0 0 40px #0005 inset;
+    }
 
-    /* === универсальные кнопки === */
-    .btn{background:#d400ff;border:none;border-radius:50px;padding:14px 60px;
-         font-size:22px;font-weight:700;color:#fff;cursor:pointer;
-         text-shadow:0 0 6px #fff;box-shadow:0 0 12px #d400ff,0 0 20px #d400ff inset;
-         transition:transform .1s}
+    /* ==== селект игр ==== */
+    #gameSelect{
+      appearance:none;cursor:pointer;font-size:18px;font-weight:700;color:#ffea00;
+      background:#190f3d;border:2px solid #ffea00;border-radius:12px;
+      padding:10px 44px 10px 16px;box-shadow:0 0 12px #ffea00,0 0 16px #fbc02d inset;
+    }
+
+    /* ==== кнопки ==== */
+    .btn{
+      background:#d400ff;border:none;border-radius:50px;padding:14px 60px;
+      font-size:22px;font-weight:700;color:#fff;cursor:pointer;
+      text-shadow:0 0 6px #fff;box-shadow:0 0 12px #d400ff,0 0 20px #d400ff inset;
+      transition:transform .1s;
+    }
     .btn:active{transform:scale(.95)}
 
-    /* === блок баланса / ставки === */
+    /* ==== блок баланса / ставки ==== */
     #infoWrap{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
     #balance,#stakeWrap{font-size:18px;color:#ffea00;text-shadow:0 0 6px #ffea00}
 
-    /* ► кастомное поле ставки: плюс/минус */
-    .stakeBox{display:inline-flex;align-items:center;border:2px solid #ffea00;border-radius:12px;
-              overflow:hidden;background:#190f3d}
-    #stakeInput{width:60px;padding:6px 8px;font-size:18px;font-weight:700;text-align:center;
-                background:none;border:none;color:#ffea00;outline:none}
+    /* красивое число ставки с +/- */
+    .stakeBox{display:inline-flex;align-items:center;border:2px solid #ffea00;
+              border-radius:12px;overflow:hidden;background:#190f3d}
+    #stakeInput{
+      width:60px;padding:6px 8px;font-size:18px;font-weight:700;text-align:center;
+      background:none;border:none;color:#ffea00;outline:none;
+    }
     .stakeBtn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;
               cursor:pointer;background:#ffea00;color:#190f3d;font-weight:700;font-size:20px;
               user-select:none}
     .stakeBtn:active{filter:brightness(.9)}
 
-    /* === контейнеры игр === */
+    /* ==== контейнеры игр ==== */
     .game{display:none;flex-direction:column;align-items:center;gap:20px}
     .game.active{display:flex}
 
     /* ---------- Wheel ---------- */
     #canvas{background:#000;border-radius:50%;box-shadow:0 0 25px #ffea00 inset,0 0 30px #d400ff}
-    .pointer{position:absolute;left:50%;top:-18px;transform:translateX(-50%);
-             width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;
-             border-top:28px solid #ffea00;filter:drop-shadow(0 0 6px #ffea00)}
+    .pointer{
+      position:absolute;left:50%;top:-18px;transform:translateX(-50%);
+      width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;
+      border-top:28px solid #ffea00;filter:drop-shadow(0 0 6px #ffea00);
+    }
 
     /* ---------- Apple of Fortune ---------- */
     #appleField{display:grid;grid-template-columns:repeat(5,60px);gap:10px}
-    .cell{width:60px;height:60px;display:flex;align-items:center;justify-content:center;
-          font-size:38px;border-radius:14px;cursor:pointer;
-          background:#190f3d;box-shadow:0 0 4px #ffea00 inset}
+    .cell{
+      width:60px;height:60px;display:flex;align-items:center;justify-content:center;
+      font-size:38px;border-radius:14px;cursor:pointer;
+      background:#190f3d;box-shadow:0 0 4px #ffea00 inset;
+    }
     .cell.open{cursor:default}
 
-    #bombPick{appearance:none;background:#190f3d;border:2px solid #ffea00;border-radius:12px;
-              color:#ffea00;font-weight:700;padding:6px 10px;margin-left:6px;cursor:pointer}
+    #bombPick{
+      appearance:none;background:#190f3d;border:2px solid #ffea00;border-radius:12px;
+      color:#ffea00;font-weight:700;padding:6px 10px;margin-left:6px;cursor:pointer;
+    }
 
     /* ---------- Crash ---------- */
     #crashScreen{font-size:48px;font-weight:700;color:#ffea00;text-shadow:0 0 12px #ffea00}
+
+    /* ---------- Admin panel ---------- */
+    #adminPanel select{
+      appearance:none;background:#190f3d;border:2px solid #ffea00;border-radius:10px;
+      color:#ffea00;font-weight:700;padding:6px 10px;cursor:pointer;
+    }
   </style>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -85,7 +108,7 @@
     <option value="crash">🚀 Crash</option>
   </select>
 
-  <!-- === игры === -->
+  <!-- ===== игры ===== -->
 
   <!-- Wheel -->
   <div id="wheelGame" class="game active panel">
@@ -95,26 +118,22 @@
     </div>
   </div>
 
-  <!-- ===== ADMIN PANEL (видна только владельцу ADMIN_ID) ===== -->
+  <!-- Admin panel (показывается только ADMIN_ID) -->
   <div id="adminPanel" class="panel" style="display:none;flex-direction:column;gap:10px">
     <b>⚙️ Подкрутка рулетки</b>
-
     <label style="display:flex;align-items:center;gap:8px">
       Выпадет сектор:
       <select id="forceSeg">
         <option value="">Случайно</option>
-        <!-- JS заполнит вариантами 0×-55× -->
+        <!-- JS добавит остальные -->
       </select>
     </label>
   </div>
 
-
   <!-- Apple -->
   <div id="appleGame" class="game panel">
-    <div>
-      Червяки: <select id="bombPick">
-        <!-- JS заполняет 1-20 -->
-      </select>
+    <div>Червяки:
+      <select id="bombPick"></select>
     </div>
     <div id="appleField"></div>
     <button id="appleCashBtn" class="btn" style="display:none">Забрать ×1.00</button>
@@ -126,10 +145,9 @@
     <button id="crashCashBtn" class="btn" style="display:none">Забрать x1.00</button>
   </div>
 
-  <!-- === баланс / ставка === -->
+  <!-- баланс / ставка -->
   <div id="infoWrap">
     <div id="balance">Баланс: … 🪙</div>
-
     <div id="stakeWrap">
       Ставка:
       <span class="stakeBox">
@@ -142,8 +160,9 @@
 
   <button id="actionBtn" class="btn">Играть!</button>
 
+  <!-- скрипты -->
   <script src="gsap.min.js"></script>
   <script src="winwheel.min.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

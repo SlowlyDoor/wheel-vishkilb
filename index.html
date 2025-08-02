@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
-    /* ==== общий фон / текст ==== */
+    /* ===== базовый фон / текст ===== */
     html,body{height:100%;margin:0;font-family:'Roboto',sans-serif}
     body{
       display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
@@ -21,21 +21,21 @@
     }
     h3{font-size:26px;font-weight:700;text-shadow:0 0 10px #fff}
 
-    /* ==== панели ==== */
+    /* ===== универсальная «стеклянная» панель ===== */
     .panel{
       background:rgba(255,255,255,.04);backdrop-filter:blur(4px);
       border:1px solid rgba(255,255,255,.06);border-radius:18px;
       padding:24px 28px;box-shadow:0 0 20px #000a,0 0 40px #0005 inset;
     }
 
-    /* ==== селект игр ==== */
+    /* ===== селектор игры ===== */
     #gameSelect{
       appearance:none;cursor:pointer;font-size:18px;font-weight:700;color:#ffea00;
       background:#190f3d;border:2px solid #ffea00;border-radius:12px;
       padding:10px 44px 10px 16px;box-shadow:0 0 12px #ffea00,0 0 16px #fbc02d inset;
     }
 
-    /* ==== кнопки ==== */
+    /* ===== кнопки ===== */
     .btn{
       background:#d400ff;border:none;border-radius:50px;padding:14px 60px;
       font-size:22px;font-weight:700;color:#fff;cursor:pointer;
@@ -44,23 +44,27 @@
     }
     .btn:active{transform:scale(.95)}
 
-    /* ==== блок баланса / ставки ==== */
+    /* ===== блок баланса / ставки ===== */
     #infoWrap{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
     #balance,#stakeWrap{font-size:18px;color:#ffea00;text-shadow:0 0 6px #ffea00}
 
-    /* красивое число ставки с +/- */
-    .stakeBox{display:inline-flex;align-items:center;border:2px solid #ffea00;
-              border-radius:12px;overflow:hidden;background:#190f3d}
+    /* поле ставки с +/- */
+    .stakeBox{
+      display:inline-flex;align-items:center;border:2px solid #ffea00;
+      border-radius:12px;overflow:hidden;background:#190f3d;
+    }
     #stakeInput{
       width:60px;padding:6px 8px;font-size:18px;font-weight:700;text-align:center;
       background:none;border:none;color:#ffea00;outline:none;
     }
-    .stakeBtn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;
-              cursor:pointer;background:#ffea00;color:#190f3d;font-weight:700;font-size:20px;
-              user-select:none}
+    .stakeBtn{
+      width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+      cursor:pointer;background:#ffea00;color:#190f3d;font-weight:700;font-size:20px;
+      user-select:none;
+    }
     .stakeBtn:active{filter:brightness(.9)}
 
-    /* ==== контейнеры игр ==== */
+    /* ===== контейнеры игр ===== */
     .game{display:none;flex-direction:column;align-items:center;gap:20px}
     .game.active{display:flex}
 
@@ -89,7 +93,7 @@
     /* ---------- Crash ---------- */
     #crashScreen{font-size:48px;font-weight:700;color:#ffea00;text-shadow:0 0 12px #ffea00}
 
-    /* ---------- Admin panel ---------- */
+    /* ---------- Панель подкрутки ---------- */
     #adminPanel select{
       appearance:none;background:#190f3d;border:2px solid #ffea00;border-radius:10px;
       color:#ffea00;font-weight:700;padding:6px 10px;cursor:pointer;
@@ -108,7 +112,7 @@
     <option value="crash">🚀 Crash</option>
   </select>
 
-  <!-- ===== игры ===== -->
+  <!-- ======= игры ======= -->
 
   <!-- Wheel -->
   <div id="wheelGame" class="game active panel">
@@ -118,19 +122,19 @@
     </div>
   </div>
 
-  <!-- Admin panel (показывается только ADMIN_ID) -->
-  <div id="adminPanel" class="panel" style="display:none;flex-direction:column;gap:10px">
+  <!-- Подкрутка доступна всем -->
+  <div id="adminPanel" class="panel" style="flex-direction:column;gap:10px">
     <b>⚙️ Подкрутка рулетки</b>
     <label style="display:flex;align-items:center;gap:8px">
       Выпадет сектор:
       <select id="forceSeg">
         <option value="">Случайно</option>
-        <!-- JS добавит остальные -->
+        <!-- app.js допишет остальные -->
       </select>
     </label>
   </div>
 
-  <!-- Apple -->
+  <!-- Apple of Fortune -->
   <div id="appleGame" class="game panel">
     <div>Червяки:
       <select id="bombPick"></select>
@@ -163,6 +167,6 @@
   <!-- скрипты -->
   <script src="gsap.min.js"></script>
   <script src="winwheel.min.js"></script>
-  <script src="app.js?v=10"></script>
+  <script src="app.js?v=11"></script>
 </body>
 </html>

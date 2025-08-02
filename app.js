@@ -1,145 +1,107 @@
-/* app.js – 3-в-1: колесо, монетка, кубик */
+/* app.js – логика прежняя, добавлены лишь спец-эффекты */
 (() => {
-  /* ---------- Telegram Web-App ---------- */
-  const tg = window.Telegram?.WebApp
-        || { expand(){}, ready(){}, sendData:console.log, showAlert:alert };
+  /* ----- Telegram Web-App ----- */
+  const tg = window.Telegram?.WebApp || { expand(){}, ready(){}, sendData:console.log, showAlert:alert };
   tg.expand(); tg.ready();
 
-  /* ---------- URL-параметры ---------- */
-  const url      = new URL(location.href);
-  let   balance  = parseInt(url.searchParams.get('bal')  || '0', 10);
-  const baseCost = parseInt(url.searchParams.get('cost') || '1', 10);
+  /* ----- параметры ----- */
+  const url = new URL(location.href);
+  let balance = +url.searchParams.get('bal') || 0;
+  const baseCost = +url.searchParams.get('cost') || 1;
 
-  /* ---------- DOM ---------- */
-  const balEl     = document.getElementById('balance');
-  const stakeEl   = document.getElementById('stakeInput');
-  const actionBtn = document.getElementById('actionBtn');
-  const gameSel   = document.getElementById('gameSelect');
+  /* ----- элементы DOM ----- */
+  const sel      = id => document.getElementById(id);
+  const gameSel  = sel('gameSelect');
+  const stakeInp = sel('stakeInput');
+  const balanceEl= sel('balance');
+  const btn      = sel('actionBtn');
+  const views    = {wheel:sel('wheelGame'),coin:sel('coinGame'),dice:sel('diceGame')};
 
-  /* инфо-поля */
-  const infoWheel = document.getElementById('infoWheel');
-  const infoCoin  = document.getElementById('infoCoin');
-  const infoDice  = document.getElementById('infoDice');
+  /* ставки/баланс */
+  const stake = () => Math.max(1, +stakeInp.value || 1) * baseCost;
+  const draw  = () => balanceEl.textContent = `Баланс: ${isNaN(balance)?'…':balance} 🪙`;
+  stakeInp.addEventListener('input',draw); draw();
 
-  /* игровые блоки */
-  const views = {
-    wheel: document.getElementById('wheelGame'),
-    coin : document.getElementById('coinGame'),
-    dice : document.getElementById('diceGame'),
-  };
-
-  /* ---------- stake / UI ---------- */
-  const stake = _ => Math.max(1, parseInt(stakeEl.value,10)||1) * baseCost;
-  const drawUI = () => {
-    balEl.textContent = `Баланс: ${isNaN(balance)?'…':balance} 🪙`;
-    infoWheel.textContent = `Стоимость спина: ${stake()} 🪙`;
-    infoCoin.textContent  = `Стоимость броска: ${stake()} 🪙`;
-    infoDice.textContent  = `Стоимость броска: ${stake()} 🪙`;
-  };
-  drawUI();
-  stakeEl.addEventListener('input',drawUI);
-
-  /* ---------- смена игры ---------- */
-  gameSel.addEventListener('change',e=>{
-    const id=e.target.value;
+  /* смена игры */
+  gameSel.addEventListener('change', e=>{
     Object.values(views).forEach(v=>v.classList.remove('active'));
-    views[id].classList.add('active');
+    views[e.target.value].classList.add('active');
   });
 
   /* ---------- 1) Колесо ---------- */
-  const segs = ['0×','2×','0×','2×','0×','2×','55×'];
-  const mult = [ 0 ,  2 , 0 ,  2 , 0 ,  2 , 55 ];
-  const wght = [200,100,200,100,200,100,1];
-  const clr  = ['#e91e63','#3f51b5','#2196f3','#009688','#9c27b0','#f44336','#ffd700'];
-
+  const labels=['0×','2×','0×','5×','0×','3×','10×','55×'];
+  const mult  =[ 0  , 2  , 0  , 5 , 0  , 3 , 10 , 55 ];
+  const colors=['#d400ff','#ffea00','#d400ff','#ffea00','#d400ff','#ffea00','#d400ff','#ffea00'];
   const wheel = new Winwheel({
-    canvasId :'canvas',
-    numSegments: segs.length,
-    outerRadius: 150,
-    pointerAngle:0,
-    textFontSize:18,
-    segments: segs.map((t,i)=>({ fillStyle:clr[i], text:t })),
-    animation:{
-      type:'spinToStop', duration:8, spins:8,
-      callbackFinished: finishSpin
-    }
+    canvasId:'canvas',numSegments:labels.length,outerRadius:160,
+    textFontSize:22,textFillStyle:'#fff',textOutlineWidth:0,lineWidth:0,
+    segments:labels.map((t,i)=>({fillStyle:colors[i],text:t})),
+    animation:{type:'spinToStop',duration:8,spins:8,callbackFinished:onStop}
   });
-  /* дорисовываем клюв */
-  const ctx=document.getElementById('canvas').getContext('2d');
-  const drawPointer=_=>{
+  const ctx=sel('canvas').getContext('2d');
+  const drawPointer=()=>{
     ctx.save();
-    ctx.fillStyle='#ffeb3b';
-    ctx.beginPath(); ctx.moveTo(140,5); ctx.lineTo(160,5); ctx.lineTo(150,23);
-    ctx.closePath(); ctx.fill(); ctx.restore();
+    ctx.fillStyle='#ffea00';
+    ctx.beginPath();ctx.moveTo(158,8);ctx.lineTo(162,8);ctx.lineTo(160,28);
+    ctx.closePath();ctx.filter='drop-shadow(0 0 6px #ffea00)';ctx.fill();ctx.restore();
   }; drawPointer();
 
-  /* ---------- 2) Монетка ---------- */
-  const coinEl=document.getElementById('coin');
-  let coinLocked=false;
-  const flipCoin=()=>{
-    coinLocked=true;
-    coinEl.classList.toggle('flip');          // анимация CSS
-    setTimeout(()=>{
-      const res=Math.random()<0.5?'heads':'tails';
-      coinEl.textContent=res==='heads'?'🪙':'💰';
-      endRound(res==='heads'?2:0,'coinFlipResult');
-      coinLocked=false;
-    },600);                                   // длительность .flip
-  };
-
-  /* ---------- 3) Кубик ---------- */
-  const diceEl=document.getElementById('dice');
-  const diceFaces=['⚀','⚁','⚂','⚃','⚄','⚅'];
-  let diceLocked=false;
-  const rollDice=()=>{
-    diceLocked=true;
-    diceEl.style.transform=`rotateX(${360+Math.random()*360}deg) rotateY(${360+Math.random()*360}deg)`;
-    setTimeout(()=>{
-      const n=1+Math.floor(Math.random()*6);
-      diceEl.textContent=diceFaces[n-1];
-      endRound(n, 'diceRollResult');
-      diceLocked=false;
-    },1000);
-  };
-
-  /* ---------- Кнопка "Играть!" ---------- */
-  let currentStake=1;
-  actionBtn.onclick=()=>{
-    if(coinLocked||diceLocked) return;
-    currentStake=stake();
-    if(!isNaN(balance) && balance<currentStake){ tg.showAlert('Недостаточно средств'); return; }
-    if(!isNaN(balance)){ balance-=currentStake; drawUI(); }
-
-    switch(gameSel.value){
-      case 'wheel': startWheel();  break;
-      case 'coin' : flipCoin();    break;
-      case 'dice' : rollDice();    break;
-    }
-  };
-
-  /* ----- wheel helpers ----- */
   function startWheel(){
-    actionBtn.disabled=true; actionBtn.textContent='Крутится…';
-    wheel.stopAnimation(false); wheel.rotationAngle=0; wheel.draw(); drawPointer();
-
-    /* сектор по весам */
-    const sum=wght.reduce((s,w)=>s+w,0);
-    let r=Math.random()*sum,acc=0,idx=0;
-    for(let i=0;i<wght.length;i++){ acc+=wght[i]; if(r<acc){idx=i;break;} }
-
-    wheel.animation.stopAngle=wheel.getRandomForSegment(idx+1);
+    btn.disabled=true;btn.textContent='Крутится…';
+    wheel.stopAnimation(false);wheel.rotationAngle=0;wheel.draw();drawPointer();
+    wheel.animation.stopAngle = wheel.getRandomForSegment(Math.floor(Math.random()*labels.length)+1);
     wheel.startAnimation();
   }
-  function finishSpin(){
+  function onStop(){
     const idx=wheel.getIndicatedSegmentNumber()-1;
-    const payout=mult[idx]*currentStake;
-    endRound(payout,'spinResult');
+    complete(mult[idx]*curStake,'spin');
   }
 
-  /* ----- общий финал раунда ----- */
-  function endRound(payout,type){
-    if(!isNaN(balance)){ balance+=payout; drawUI(); }
-    tg.sendData(JSON.stringify({type, stake:currentStake, payout}));
-    actionBtn.disabled=false; actionBtn.textContent='Играть!';
+  /* ---------- 2) Монетка ---------- */
+  const coinEl=sel('coin');
+  let coinBusy=false;
+  function flipCoin(){
+    if(coinBusy)return;coinBusy=true;
+    coinEl.classList.remove('flip');void coinEl.offsetWidth; // reset anim
+    coinEl.classList.add('flip');
+    setTimeout(()=>{
+      const heads=Math.random()<.5;
+      coinEl.textContent=heads?'🪙':'💰';
+      complete(heads?2*curStake:0,'coin');
+      coinBusy=false;
+    },600);
+  }
+
+  /* ---------- 3) Кубик ---------- */
+  const diceEl=sel('dice');
+  const faces=['⚀','⚁','⚂','⚃','⚄','⚅'];
+  let diceBusy=false;
+  function rollDice(){
+    if(diceBusy)return;diceBusy=true;
+    diceEl.style.transform = `rotateX(${360+Math.random()*720}deg) rotateY(${360+Math.random()*720}deg)`;
+    setTimeout(()=>{
+      const n=Math.floor(Math.random()*6);
+      diceEl.textContent=faces[n];
+      complete((n+1)*curStake,'dice');
+      diceBusy=false;
+    },1000);
+  }
+
+  /* ---------- старт по кнопке ---------- */
+  let curStake=1;
+  btn.onclick=_=>{
+    if(coinBusy||diceBusy)return;
+    curStake=stake();
+    if(balance<curStake){tg.showAlert('Недостаточно средств');return;}
+    balance-=curStake;draw();
+
+    {'wheel':startWheel,'coin':flipCoin,'dice':rollDice}[gameSel.value]();
+  };
+
+  /* ---------- финализировать раунд ---------- */
+  function complete(payout,type){
+    balance+=payout;draw();
+    tg.sendData(JSON.stringify({type,stake:curStake,payout}));
+    btn.disabled=false;btn.textContent='Играть!';
   }
 })();

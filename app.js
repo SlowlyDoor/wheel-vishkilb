@@ -6,6 +6,7 @@
 
   tg.expand();
   tg.ready();
+  const fire = window.confetti || (()=>{});
   /* ---------- URL-параметры ---------- */
   const url      = new URL(location.href);
   let   balance  = parseInt(url.searchParams.get('bal')  || '0', 10);
@@ -15,7 +16,6 @@
   const balEl   = document.getElementById('balance');
   const stakeEl = document.getElementById('stakeInput');
   const infoEl  = document.getElementById('info');
-  const saveBtn = document.getElementById('saveBtn');
 
   const stake = () => Math.max(1, parseInt(stakeEl.value, 10) || 1) * baseCost;
   const drawUI = () => {
@@ -108,19 +108,6 @@
 
   stakeEl.addEventListener('input', drawUI);
 
-  /* ---------- Кнопка "Сохранить изменения" ---------- */
-  saveBtn.onclick = () => {
-    const stakeValue = stake();
-    const data = {
-      type: 'saveSettings',
-      stake: stakeValue,
-      balance: isNaN(balance) ? null : balance
-    };
-    tg.ready();
-    tg.sendData(JSON.stringify({text:"test"}));
-    tg.showAlert('Настройки отправлены!');
-  };
-
   /* ---------- callbackFinished ---------- */
   function finishSpin () {
     const idx    = wheel.getIndicatedSegmentNumber() - 1;
@@ -133,6 +120,10 @@
     tg.ready();
     tg.sendData(JSON.stringify({ type:'spinResult', stake:currentStake, payout }));
 
+    if (payout) {
+      gsap.fromTo('#canvas',{scale:1.05},{scale:1,duration:0.6,ease:'elastic.out(1,0.4)'});
+      fire({particleCount:120,spread:75,origin:{y:0.25}});
+    }
     locked = false;
     btn.disabled = false;
     btn.textContent = 'Крутить!';

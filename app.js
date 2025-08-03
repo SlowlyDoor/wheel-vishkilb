@@ -164,14 +164,14 @@
     }
 
     crashMul=1.0;
-    crashLimit=+(CONFIG.crashMin+Math.random()*(CONFIG.crashMax-CONFIG.crashMin)).toFixed(2);
-    crashScr.textContent='x1.00'; crashBtn.textContent='Забрать x1.00'; crashBtn.style.display='block';
+    crashLimit=+(CONFIG.crashMin+Math.random()*(CONFIG.crashMax-CONFIG.crashMin)).toFixed(3);
+    crashScr.textContent='x1.000'; crashBtn.textContent='Забрать x1.000'; crashBtn.style.display='block';
 
     const factor = 1 + CONFIG.crashStep;          // экспоненциальный прирост
     crashT=setInterval(()=>{
-      crashMul = +(crashMul*factor).toFixed(2);
-      crashScr.textContent=`x${crashMul.toFixed(2)}`;
-      crashBtn.textContent  =`Забрать x${crashMul.toFixed(2)}`;
+      crashMul = +(crashMul*factor).toFixed(3);
+      crashScr.textContent=`x${crashMul.toFixed(3)}`;
+      crashBtn.textContent  =`Забрать x${crashMul.toFixed(3)}`;
 
       if(crashMul>=crashLimit){
         clearInterval(crashT);

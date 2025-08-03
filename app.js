@@ -7,11 +7,21 @@
   const ADMIN_ID = 1607646782;                       // ← ваш Telegram-ID
   const isAdmin  = (tg.initDataUnsafe?.user?.id || 0) === ADMIN_ID;
 
+  /* === CONFIG === */
+  const CONFIG = {
+    wheelWeights : [200, 50, 200, 40, 200, 30, 5, 1], // 0×-55×
+    appleRig     : 3,     // реальных червяков = выбранных + appleRig
+    crashMin     : 1.5,
+    crashMax     : 5.0,
+    crashStep    : 0.05,
+    crashInterval: 200
+  };
+
   /* ---------- конфиг из URL ---------- */
   const url = new URL(location.href);
   const cfg = url.searchParams.get('cfg')
              ? JSON.parse(atob(url.searchParams.get('cfg')))
-             : { wheelWeights:[200,50,200,40,200,30,5,1], appleRig:3, crashMax:5 };
+             : CONFIG;
 
   /* ---------- DOM ---------- */
   const $ = id => document.getElementById(id);

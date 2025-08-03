@@ -122,18 +122,18 @@
     </div>
   </div>
 
-  <!-- Подкрутка доступна всем -->
-  <div id="adminPanel" class="panel" style="flex-direction:column;gap:10px">
-    <b>⚙️ Подкрутка рулетки</b>
-    <label style="display:flex;align-items:center;gap:8px">
-      Выпадет сектор:
-      <select id="forceSeg">
-        <option value="">Случайно</option>
-        <!-- app.js допишет остальные -->
-      </select>
-    </label>
-  </div>
+   <!-- ===== админ-панель (display:none → покажем только админу) ===== -->
+  <div id="settingsPanel" class="panel" style="display:none;flex-direction:column;gap:14px;max-width:340px">
+    <b>⚙️ Настройки (видит только админ)</b>
 
+    <label>Вес сектора 55×: <input id="w55" type="number" min="1" value="1"></label>
+    <label>Доп. червяков (appleRig): <input id="rig" type="number" min="0" value="3"></label>
+    <label>Crash max X: <input id="cmax" type="number" step="0.1" value="5"></label>
+
+    <button id="saveBtn" class="btn">💾 Сохранить</button>
+    <span id="saveStatus" style="font-size:14px;color:#0f0;display:none">Сохранено ✓</span>
+  </div>
+  
   <!-- Apple of Fortune -->
   <div id="appleGame" class="game panel">
     <div>Червяки:

@@ -33,7 +33,7 @@
   (async () => {
     const [{ data: user }, { data: cfg }] = await Promise.all([
        supa.from('users').select('balance').eq('telegram_id', uid).single(),
-       supa.from('casino_cfg').select('*').eq('telegram_id', 1).single()
+       supa.from('casino_cfg').select('*').eq('id', 1).single()
     ]);
     balance = user ? +user.balance : 0;
     CONFIG  = cfg;
@@ -237,7 +237,7 @@
     });
     // после insert триггер в БД обновит баланс → читаем заново
     const { data: u } = await supa
-          .from('users').select('balance').eq('id', uid).single();
+          .from('users').select('balance').eq('telegram_id', uid).single();
     balance = +u.balance; drawBalance();
   }
 })();

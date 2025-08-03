@@ -71,8 +71,25 @@ h3{font-size:24px;font-weight:700;margin:0;text-shadow:0 0 10px #fff}
 
 /* ---------- Apple ---------- */
 #appleField{display:grid;grid-template-columns:repeat(5,52px);gap:8px}
-.cell{width:52px;height:52px;font-size:34px;border-radius:12px;background:#190f3d;box-shadow:0 0 3px #ffea00 inset;cursor:pointer}
+.cell{
+  position:relative;
+  width:52px;height:52px;
+  border-radius:12px;
+  background:#190f3d;
+  box-shadow:0 0 3px #ffea00 inset;
+  cursor:pointer;
+}
 .cell.open{cursor:default}
+
+/* сам эмодзи */
+.cell span{
+  position:absolute;           /* центруем в ячейке */
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  font-size:34px;
+  line-height:1;               /* убираем лишний “подвал” */
+  pointer-events:none;         /* чтобы клики шли по .cell */
+}
 #bombPick{appearance:none;background:#190f3d;border:2px solid #ffea00;border-radius:10px;color:#ffea00;font-weight:700;padding:4px 8px;margin-left:6px;cursor:pointer}
 
 /* ---------- Crash ---------- */

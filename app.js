@@ -113,7 +113,9 @@
 
     cashBtn.style.display='none'; cashBtn.textContent='Забрать ×1.00';
     for(let i=0;i<25;i++){
-      const d=document.createElement('div');d.className='cell';d.textContent='🍏';
+      const d=document.createElement('div');
+      d.className='cell';
+      d.innerHTML = '<span>🍏</span>';
       d.onclick=()=>openApple(i); field.appendChild(d); cells.push(d);}
   }
 
@@ -123,7 +125,8 @@
 
     if(bombsReal.has(i)){                       /* проигрыш */
       if(!bombsShow.has(i)){const [f]=bombsShow; bombsShow.delete(f); bombsShow.add(i);}
-      bombsShow.forEach(j=>{cells[j].classList.add('open');cells[j].textContent='🐛';});
+      bombsShow.forEach(j=>{cells[j].classList.add('open');
+        cells[i].innerHTML = '<span>🐛</span>';});
       appleGameEnd(); setTimeout(()=>finishRound(0,'appleLoss'),600); return;
     }
     opened++;

@@ -116,7 +116,8 @@
   /* ===================================================================== *
    * 2) APPLE OF FORTUNE                                                   *
    * ===================================================================== */
-  const field=$('appleField'), cashBtn=$('appleCashBtn');
+  const field=$('appleField'), 
+        cashBtn=$('appleCashBtn');
   let cells=[], bombsReal=new Set(), bombsShow=new Set(),
     bombsShown=0, opened=0, appleMul=1, appleOver=false;
 
@@ -134,6 +135,7 @@
 
 
   function prepareApple(){
+    curStake = stake();
     field.innerHTML=''; field.classList.remove('blocked');
     cells=[]; bombsReal.clear(); bombsShow.clear(); opened=0; appleMul=1; appleOver=false;
 
@@ -142,7 +144,8 @@
     while(bombsReal.size<total) bombsReal.add(Math.floor(Math.random()*25));
     bombsShow=new Set([...bombsReal].sort(()=>0.5-Math.random()).slice(0,bombsShown));
 
-    cashBtn.style.display='none'; cashBtn.textContent=`Забрать ${fmtCoins(curStake * appleMul)}`;
+    cashBtn.style.display='none'; 
+    cashBtn.textContent=`Забрать ${fmtCoins(curStake * appleMul)}`;
     for(let i=0;i<25;i++){
       const d=document.createElement('div');
       d.className='cell';
@@ -229,7 +232,9 @@
 
   actionBtn.onclick=_=>{
     if(balance<stake()){tg.showAlert('Недостаточно средств');return;}
-    curStake=stake(); balance-=curStake; drawBalance();
+    curStake=stake(); 
+    balance-=curStake; 
+    drawBalance();
     tg.sendData(JSON.stringify({type:'bet',stake:curStake}));
 
     switch(gameSel.value){
@@ -246,7 +251,7 @@
     });
     // после insert триггер в БД обновит баланс → читаем заново
     const { data: u } = await supa
-          .from('users').select('balance').eq('telegram_idy', uid).single();
+          .from('users').select('balance').eq('telegram_id', uid).single();
     balance = +u.balance; drawBalance();
   }
 })();

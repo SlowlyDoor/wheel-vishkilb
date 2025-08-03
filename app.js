@@ -1,128 +1,455 @@
-/* Lucky Spin widget — читает cfg из URL, без визуальной настройки */
-(()=>{
-  const tg=window.Telegram?.WebApp||{expand(){},ready(){},showAlert:alert};
-  tg.expand();tg.ready();
+/* ===== Casino Widget (Wheel + Apple + Crash) v2, open rig panel ===== */
+(() => {
+  /* === Telegram helpers === */
+  const tg = window.Telegram?.WebApp ||
+            {expand(){},ready(){},sendData:console.log,showAlert:alert};
+  tg.expand(); tg.ready();
 
-  /* ---------- cfg из URL ---------- */
-  const url=new URL(location.href);
-  const cfg=url.searchParams.get('cfg')
-           ? JSON.parse(atob(url.searchParams.get('cfg')))
-           : {wheelWeights:[200,50,200,40,200,30,5,1],appleRig:3,crashMax:5};
+  /* === DOM shortcut === */
+  const $ = id => document.getElementById(id);
 
-  const $=id=>document.getElementById(id);
+  /* === CONFIG === */
+  const url  = new URL(location.href);
+  const CONFIG  = url.searchParams.get('cfg')
+             ? JSON.parse(atob(url.searchParams.get('cfg')))
+             : { wheelWeights:[200,50,200,40,200,30,5,1], appleRig:3, crashMax:5 };
 
-  /* баланс / ставка */
-  let balance=+url.searchParams.get('bal')||0;
-  const fmt   = n => n.toFixed(2);
-  const balEl = $('#balance');            // ← кэшируем ссылку
-  const draw  = () => { if (balEl) balEl.textContent = fmt(balance); };
-  draw();
+/* ===== Casino Widget (Wheel + Apple + Crash) v2, open rig panel ===== */
+(() => {
+  /* === Telegram helpers === */
+  const tg = window.Telegram?.WebApp ||
+            {expand(){},ready(){},sendData:console.log,showAlert:alert};
+  tg.expand(); tg.ready();
 
-  /* ---------- выбор игры ---------- */
-  const sel = $('#gameSelect');
-  if (sel) {
-    const views = {wheel:$('#wheelGame'), apple:$('#appleGame'), crash:$('#crashGame')};
-    sel.onchange = e => {
-      Object.values(views).forEach(v => v?.classList.remove('active'));
-      views[e.target.value]?.classList.add('active');
-    };
+  /* === DOM shortcut === */
+  const $ = id => document.getElementById(id);
+
+  /* === URL params (balance / cost) === */
+  const url       = new URL(location.href);
+  let   balance   = +url.searchParams.get('bal')  || 0;
+  const baseCost  = +url.searchParams.get('cost') || 1;
+
+  /* === Elements === */
+  const stakeInp  = $('stakeInput');
+  const balanceEl = $('balance');
+  const gameSel   = $('gameSelect');
+  const actionBtn = $('actionBtn');
+  const plusStake = $('plusStake');
+  const minusStake= $('minusStake');
+  const bombPick  = $('bombPick');
+  const forceSeg  = $('forceSeg');
+
+  /* заполнить селект «червяков» 1-20 */
+  for (let i=1;i<=20;i++){
+    const o=document.createElement('option');
+    o.value=i; o.textContent=i;
+    bombPick.appendChild(o);
   }
+  bombPick.value = 5;
 
-  /* ---------- wheel ---------- */
-  const labels=['0×','2×','0×','5×','0×','3×','10×','55×'],
-        mult  =[0,2,0,5,0,3,10,55],
-        colors=['#d400ff','#ffea00','#d400ff','#ffea00','#d400ff','#ffea00','#d400ff','#ffea00'];
+  /* заполнить селект «форс-сектора» */
+  const labels = ['0×','2×','0×','5×','0×','3×','10×','55×'];
+  labels.forEach((txt,idx)=>{
+    const o=document.createElement('option');
+    o.value=idx; o.textContent=txt;
+    forceSeg.appendChild(o);
+  });
 
-  const pick=w=>{
-    const s=w.reduce((a,b)=>a+b,0); let r=Math.random()*s,a=0;
-    for(let i=0;i<w.length;i++){a+=w[i];if(r<a)return i;}return 7;
+  /* === баланс / ставка === */
+  const stake = () => Math.max(1, +stakeInp.value || 1) * baseCost;
+  const fmt   = n => n.toFixed(2);
+  const drawBalance = () => balanceEl.textContent = `Баланс: ${fmt(balance)} 🪙`;
+  drawBalance();
+
+  plusStake.onclick  = ()=>{ stakeInp.stepUp(); drawBalance(); };
+  minusStake.onclick = ()=>{ stakeInp.stepDown(); drawBalance(); };
+  stakeInp.oninput   = drawBalance;
+
+  /* === переключение игр === */
+  const views = {wheel:$('wheelGame'),apple:$('appleGame'),crash:$('crashGame')};
+  gameSel.onchange = e=>{
+    Object.values(views).forEach(v=>v.classList.remove('active'));
+    views[e.target.value].classList.add('active');
+  };
+
+  /* ******************************************************************* *
+   * 1) WHEEL                                                            *
+   * ******************************************************************* */
+  const mult  =[ 0,2,0,5,0,3,10,55 ];
+  const colors=['#d400ff','#ffea00','#d400ff','#ffea00','#d400ff',
+                '#ffea00','#d400ff','#ffea00'];
+
+  const pickByWeight = w=>{
+    const sum=w.reduce((s,v)=>s+v,0);
+    let r=Math.random()*sum, acc=0;
+    for(let i=0;i<w.length;i++){ acc+=w[i]; if(r<acc)return i; }
+    return w.length-1;
   };
 
   const wheel=new Winwheel({
     canvasId:'canvas',numSegments:labels.length,outerRadius:160,
-    textFontSize:22,textFillStyle:'#fff',
-    segments:labels.map((t,i)=>({text:t,fillStyle:colors[i]})),
-    animation:{type:'spinToStop',duration:8,spins:8,callbackFinished:i=>{
-      balance+=mult[i.text-1]*bet;draw();
-    }}
+    textFontSize:22,textFillStyle:'#fff',textOutlineWidth:0,lineWidth:0,
+    segments:labels.map((t,i)=>({fillStyle:colors[i],text:t})),
+    animation:{type:'spinToStop',duration:8,spins:8,callbackFinished:onWheelStop}
   });
-  // стрелка
-  (()=>{const c=$('canvas').getContext('2d');c.fillStyle='#ffea00';
-        c.beginPath();c.moveTo(158,8);c.lineTo(162,8);c.lineTo(160,28);c.fill();})();
+  const ctx=$('canvas').getContext('2d');
+  const drawPointer=()=>{
+    ctx.save();ctx.fillStyle='#ffea00';
+    ctx.beginPath();ctx.moveTo(158,8);ctx.lineTo(162,8);ctx.lineTo(160,28);
+    ctx.closePath();ctx.filter='drop-shadow(0 0 6px #ffea00)';ctx.fill();ctx.restore();
+  }; drawPointer();
 
-  /* ---------- apple ---------- */
-  const field=$('#appleField'),
-        bombSel=$('#bombPick'),
-        cashBtn=$('#appleCashBtn');
-  if (bombSel) {
-    for(let i=1;i<=20;i++) {
-      const o = document.createElement('option');
-      o.value=i;
-      o.textContent=i;
-      bombSel.appendChild(o);
-    }
-    bombSel.value=5;
+  let curStake=1;
+
+  function startWheel(){
+    disablePlay('Крутится…');
+    wheel.stopAnimation(false); wheel.rotationAngle=0; wheel.draw(); drawPointer();
+
+    /* ► сектор: выбран пользователем или по весам */
+    const stopSeg = (forceSeg && forceSeg.value!=='')
+        ? (+forceSeg.value + 1)                     // Winwheel 1-индексация
+        : pickByWeight(CONFIG.wheelWeights) + 1;
+
+    wheel.animation.stopAngle = wheel.getRandomForSegment(stopSeg);
+    wheel.startAnimation();
   }
-  
+  function onWheelStop(){
+    const idx=wheel.getIndicatedSegmentNumber()-1;
+    finishRound(mult[idx]*curStake,'wheel');
+  }
 
-  /* ---------- crash ---------- */
-  const crashScr=$('#crashScreen'),crashBtn=$('#crashCashBtn');
+  /* ******************************************************************* *
+   * 2) APPLE OF FORTUNE                                                 *
+   * ******************************************************************* */
+  const field   = $('appleField');
+  const cashBtn = $('appleCashBtn');
+  let apples=[], bombsReal=new Set(), bombsDisplay=new Set(),
+      bombsShown=0, opened=0, appleMul=1;
 
-  /* ---------- play ---------- */
-  let bet=1;
-  const actionBtn = $('#actionBtn');
-  if (actionBtn) {
-    actionBtn.onclick=()=>{
-    bet=+$('#stakeInput').value||1;
-    if(balance<bet){tg.showAlert('Недостаточно средств');return;}
-    balance-=bet;draw();
-    const g=$('#gameSelect').value;
+  function prepareApple(){
+    field.innerHTML='';
+    apples=[]; bombsReal.clear(); bombsDisplay.clear();
+    opened=0; appleMul=1;
 
-    if(g==='wheel'){
-      wheel.stopAnimation(false);wheel.rotationAngle=0;wheel.draw();
-      const idx=pick(cfg.wheelWeights);
-      wheel.animation.stopAngle=wheel.getRandomForSegment(idx+1);
-      wheel.startAnimation();
+    bombsShown = +bombPick.value;
+    const totalBombs = Math.min(24, bombsShown + CONFIG.appleRig);
 
-    }else if(g==='apple'){
-      field.innerHTML='';cashBtn.style.display='none';
-      let appleMul=1,opened=0,bombsReal=new Set(),bombsShow=new Set();
-      const shown=+bombSel.value,total=Math.min(24,shown+cfg.appleRig);
-      while(bombsReal.size<total)bombsReal.add(Math.floor(Math.random()*25));
-      bombsShow=new Set([...bombsReal].sort(()=>0.5-Math.random()).slice(0,shown));
+    while(bombsReal.size<totalBombs)
+      bombsReal.add(Math.floor(Math.random()*25));
 
-      const cells=[];
-      for(let i=0;i<25;i++){
-        const d=document.createElement('div');d.className='cell';d.textContent='🍏';
-        d.onclick=()=>open(i);field.appendChild(d);cells.push(d);
+    const shuffled=[...bombsReal].sort(()=>0.5-Math.random());
+    bombsDisplay = new Set(shuffled.slice(0,bombsShown));
+
+    cashBtn.style.display='none'; cashBtn.textContent='Забрать ×1.00';
+
+    for(let i=0;i<25;i++){
+      const c=document.createElement('div');
+      c.className='cell'; c.textContent='🍏';
+      c.onclick=()=>openApple(i);
+      field.appendChild(c); apples.push(c);
+    }
+  }
+
+  function openApple(idx){
+    if(apples[idx].classList.contains('open')) return;
+
+    apples[idx].classList.add('open');
+
+    if(bombsReal.has(idx)){       /* ► проигрыш */
+      if(!bombsDisplay.has(idx)){
+        const [rep]=bombsDisplay; bombsDisplay.delete(rep); bombsDisplay.add(idx);
       }
-      function open(i){
-        if(cells[i].classList.contains('open'))return;
-        cells[i].classList.add('open');
-        if(bombsReal.has(i)){
-          if(!bombsShow.has(i)){bombsShow.delete([...bombsShow][0]);bombsShow.add(i);}
-          bombsShow.forEach(j=>{cells[j].classList.add('open');cells[j].textContent='🐛';});
-          return;
-        }
-        opened++;appleMul=+(1+opened*0.2).toFixed(2);
-        cells[i].textContent='🍎';
-        cashBtn.textContent=`Забрать ×${appleMul.toFixed(2)}`;
-        cashBtn.style.display='block';
-      }
-      cashBtn.onclick=()=>{balance+=bet*appleMul;draw();cashBtn.style.display='none';};
+      bombsDisplay.forEach(i=>{
+        apples[i].classList.add('open'); apples[i].textContent='🐛';
+      });
+      gsap.to(apples[idx],{scale:1.2,yoyo:true,repeat:3,duration:0.15});
+      cashBtn.style.display='none';
+      setTimeout(()=>finishRound(0,'appleLoss'),600);
+      return;
+    }
 
-    }else{
-      let cm=1,limit=+(1.5+Math.random()*(cfg.crashMax-1.5)).toFixed(2);
-      crashScr.textContent='x1.00';crashBtn.textContent='Забрать x1.00';crashBtn.style.display='block';
-      const t=setInterval(()=>{
-        cm=+(cm+0.05).toFixed(2);
-        crashScr.textContent=`x${cm.toFixed(2)}`;
-        crashBtn.textContent  =`Забрать x${cm.toFixed(2)}`;
-        if(cm>=limit){clearInterval(t);crashBtn.style.display='none';crashScr.textContent='💥 CRASH';}
-      },200);
-      crashBtn.onclick=()=>{clearInterval(t);balance+=bet*cm;draw();crashBtn.style.display='none';};
+    opened++;
+    appleMul = +(1 + opened*0.2).toFixed(2);
+    apples[idx].textContent='🍎';
+    cashBtn.textContent=`Забрать ×${appleMul.toFixed(2)}`;
+    cashBtn.style.display='block';
+  }
+  cashBtn.onclick = ()=>finishRound(curStake*appleMul,'appleWin');
+
+  /* ******************************************************************* *
+   * 3) CRASH                                                            *
+   * ******************************************************************* */
+  const crashScreen=$('crashScreen');
+  const crashBtn   =$('crashCashBtn');
+  let crashTimer=null, crashMul=1, crashLimit=2;
+
+  function startCrash(){
+    crashMul=1;
+    crashLimit = +(CONFIG.crashMin + Math.random()*
+                 (CONFIG.crashMax - CONFIG.crashMin)).toFixed(2);
+    crashScreen.textContent='x1.00';
+    crashBtn.textContent   ='Забрать x1.00';
+    crashBtn.style.display='block';
+
+    crashTimer=setInterval(()=>{
+      crashMul = +(crashMul + CONFIG.crashStep).toFixed(2);
+      crashScreen.textContent=`x${crashMul.toFixed(2)}`;
+      crashBtn.textContent   =`Забрать x${crashMul.toFixed(2)}`;
+
+      if(crashMul>=crashLimit){
+        clearInterval(crashTimer); crashBtn.style.display='none';
+        gsap.to(crashScreen,{scale:1.3,yoyo:true,repeat:3,duration:0.15,onComplete:()=>{
+          crashScreen.textContent='💥 CRASH';
+          finishRound(0,'crashLoss');
+        }});
+      }
+    },CONFIG.crashInterval);
+  }
+  crashBtn.onclick=()=>{
+    clearInterval(crashTimer); crashBtn.style.display='none';
+    finishRound(curStake*crashMul,'crashWin');
+  };
+
+  /* ******************************************************************* *
+   *  кнопка «Играть!» / финал раунда                                    *
+   * ******************************************************************* */
+  function disablePlay(t){ actionBtn.disabled=true; actionBtn.textContent=t; }
+  function enablePlay(){ actionBtn.disabled=false; actionBtn.textContent='Играть!'; }
+
+  actionBtn.onclick=()=>{
+    if(balance<stake()){ tg.showAlert('Недостаточно средств'); return; }
+
+    curStake = stake();
+    balance -= curStake; drawBalance();
+    tg.sendData(JSON.stringify({type:'bet',stake:curStake}));
+
+    switch(gameSel.value){
+      case 'wheel': startWheel();   break;
+      case 'apple': prepareApple(); disablePlay('Открой яблочко'); break;
+      case 'crash': startCrash();   disablePlay('Идёт раунд…');    break;
     }
   };
+
+  function finishRound(pay,kind){
+    pay = +pay.toFixed(2);
+    balance = +(balance + pay).toFixed(2);
+    drawBalance();
+    tg.sendData(JSON.stringify({type:kind,stake:curStake,payout:pay}));
+    enablePlay();
   }
-  
+})();
+
+  /* === URL params (balance / cost) === */
+  const url       = new URL(location.href);
+  let   balance   = +url.searchParams.get('bal')  || 0;
+  const baseCost  = +url.searchParams.get('cost') || 1;
+
+  /* === Elements === */
+  const stakeInp  = $('stakeInput');
+  const balanceEl = $('balance');
+  const gameSel   = $('gameSelect');
+  const actionBtn = $('actionBtn');
+  const plusStake = $('plusStake');
+  const minusStake= $('minusStake');
+  const bombPick  = $('bombPick');
+  const forceSeg  = $('forceSeg');
+
+  /* заполнить селект «червяков» 1-20 */
+  for (let i=1;i<=20;i++){
+    const o=document.createElement('option');
+    o.value=i; o.textContent=i;
+    bombPick.appendChild(o);
+  }
+  bombPick.value = 5;
+
+  /* заполнить селект «форс-сектора» */
+  const labels = ['0×','2×','0×','5×','0×','3×','10×','55×'];
+  labels.forEach((txt,idx)=>{
+    const o=document.createElement('option');
+    o.value=idx; o.textContent=txt;
+    forceSeg.appendChild(o);
+  });
+
+  /* === баланс / ставка === */
+  const stake = () => Math.max(1, +stakeInp.value || 1) * baseCost;
+  const fmt   = n => n.toFixed(2);
+  const drawBalance = () => balanceEl.textContent = `Баланс: ${fmt(balance)} 🪙`;
+  drawBalance();
+
+  plusStake.onclick  = ()=>{ stakeInp.stepUp(); drawBalance(); };
+  minusStake.onclick = ()=>{ stakeInp.stepDown(); drawBalance(); };
+  stakeInp.oninput   = drawBalance;
+
+  /* === переключение игр === */
+  const views = {wheel:$('wheelGame'),apple:$('appleGame'),crash:$('crashGame')};
+  gameSel.onchange = e=>{
+    Object.values(views).forEach(v=>v.classList.remove('active'));
+    views[e.target.value].classList.add('active');
+  };
+
+  /* ******************************************************************* *
+   * 1) WHEEL                                                            *
+   * ******************************************************************* */
+  const mult  =[ 0,2,0,5,0,3,10,55 ];
+  const colors=['#d400ff','#ffea00','#d400ff','#ffea00','#d400ff',
+                '#ffea00','#d400ff','#ffea00'];
+
+  const pickByWeight = w=>{
+    const sum=w.reduce((s,v)=>s+v,0);
+    let r=Math.random()*sum, acc=0;
+    for(let i=0;i<w.length;i++){ acc+=w[i]; if(r<acc)return i; }
+    return w.length-1;
+  };
+
+  const wheel=new Winwheel({
+    canvasId:'canvas',numSegments:labels.length,outerRadius:160,
+    textFontSize:22,textFillStyle:'#fff',textOutlineWidth:0,lineWidth:0,
+    segments:labels.map((t,i)=>({fillStyle:colors[i],text:t})),
+    animation:{type:'spinToStop',duration:8,spins:8,callbackFinished:onWheelStop}
+  });
+  const ctx=$('canvas').getContext('2d');
+  const drawPointer=()=>{
+    ctx.save();ctx.fillStyle='#ffea00';
+    ctx.beginPath();ctx.moveTo(158,8);ctx.lineTo(162,8);ctx.lineTo(160,28);
+    ctx.closePath();ctx.filter='drop-shadow(0 0 6px #ffea00)';ctx.fill();ctx.restore();
+  }; drawPointer();
+
+  let curStake=1;
+
+  function startWheel(){
+    disablePlay('Крутится…');
+    wheel.stopAnimation(false); wheel.rotationAngle=0; wheel.draw(); drawPointer();
+
+    /* ► сектор: выбран пользователем или по весам */
+    const stopSeg = (forceSeg && forceSeg.value!=='')
+        ? (+forceSeg.value + 1)                     // Winwheel 1-индексация
+        : pickByWeight(CONFIG.wheelWeights) + 1;
+
+    wheel.animation.stopAngle = wheel.getRandomForSegment(stopSeg);
+    wheel.startAnimation();
+  }
+  function onWheelStop(){
+    const idx=wheel.getIndicatedSegmentNumber()-1;
+    finishRound(mult[idx]*curStake,'wheel');
+  }
+
+  /* ******************************************************************* *
+   * 2) APPLE OF FORTUNE                                                 *
+   * ******************************************************************* */
+  const field   = $('appleField');
+  const cashBtn = $('appleCashBtn');
+  let apples=[], bombsReal=new Set(), bombsDisplay=new Set(),
+      bombsShown=0, opened=0, appleMul=1;
+
+  function prepareApple(){
+    field.innerHTML='';
+    apples=[]; bombsReal.clear(); bombsDisplay.clear();
+    opened=0; appleMul=1;
+
+    bombsShown = +bombPick.value;
+    const totalBombs = Math.min(24, bombsShown + CONFIG.appleRig);
+
+    while(bombsReal.size<totalBombs)
+      bombsReal.add(Math.floor(Math.random()*25));
+
+    const shuffled=[...bombsReal].sort(()=>0.5-Math.random());
+    bombsDisplay = new Set(shuffled.slice(0,bombsShown));
+
+    cashBtn.style.display='none'; cashBtn.textContent='Забрать ×1.00';
+
+    for(let i=0;i<25;i++){
+      const c=document.createElement('div');
+      c.className='cell'; c.textContent='🍏';
+      c.onclick=()=>openApple(i);
+      field.appendChild(c); apples.push(c);
+    }
+  }
+
+  function openApple(idx){
+    if(apples[idx].classList.contains('open')) return;
+
+    apples[idx].classList.add('open');
+
+    if(bombsReal.has(idx)){       /* ► проигрыш */
+      if(!bombsDisplay.has(idx)){
+        const [rep]=bombsDisplay; bombsDisplay.delete(rep); bombsDisplay.add(idx);
+      }
+      bombsDisplay.forEach(i=>{
+        apples[i].classList.add('open'); apples[i].textContent='🐛';
+      });
+      gsap.to(apples[idx],{scale:1.2,yoyo:true,repeat:3,duration:0.15});
+      cashBtn.style.display='none';
+      setTimeout(()=>finishRound(0,'appleLoss'),600);
+      return;
+    }
+
+    opened++;
+    appleMul = +(1 + opened*0.2).toFixed(2);
+    apples[idx].textContent='🍎';
+    cashBtn.textContent=`Забрать ×${appleMul.toFixed(2)}`;
+    cashBtn.style.display='block';
+  }
+  cashBtn.onclick = ()=>finishRound(curStake*appleMul,'appleWin');
+
+  /* ******************************************************************* *
+   * 3) CRASH                                                            *
+   * ******************************************************************* */
+  const crashScreen=$('crashScreen');
+  const crashBtn   =$('crashCashBtn');
+  let crashTimer=null, crashMul=1, crashLimit=2;
+
+  function startCrash(){
+    crashMul=1;
+    crashLimit = +(CONFIG.crashMin + Math.random()*
+                 (CONFIG.crashMax - CONFIG.crashMin)).toFixed(2);
+    crashScreen.textContent='x1.00';
+    crashBtn.textContent   ='Забрать x1.00';
+    crashBtn.style.display='block';
+
+    crashTimer=setInterval(()=>{
+      crashMul = +(crashMul + CONFIG.crashStep).toFixed(2);
+      crashScreen.textContent=`x${crashMul.toFixed(2)}`;
+      crashBtn.textContent   =`Забрать x${crashMul.toFixed(2)}`;
+
+      if(crashMul>=crashLimit){
+        clearInterval(crashTimer); crashBtn.style.display='none';
+        gsap.to(crashScreen,{scale:1.3,yoyo:true,repeat:3,duration:0.15,onComplete:()=>{
+          crashScreen.textContent='💥 CRASH';
+          finishRound(0,'crashLoss');
+        }});
+      }
+    },CONFIG.crashInterval);
+  }
+  crashBtn.onclick=()=>{
+    clearInterval(crashTimer); crashBtn.style.display='none';
+    finishRound(curStake*crashMul,'crashWin');
+  };
+
+  /* ******************************************************************* *
+   *  кнопка «Играть!» / финал раунда                                    *
+   * ******************************************************************* */
+  function disablePlay(t){ actionBtn.disabled=true; actionBtn.textContent=t; }
+  function enablePlay(){ actionBtn.disabled=false; actionBtn.textContent='Играть!'; }
+
+  actionBtn.onclick=()=>{
+    if(balance<stake()){ tg.showAlert('Недостаточно средств'); return; }
+
+    curStake = stake();
+    balance -= curStake; drawBalance();
+    tg.sendData(JSON.stringify({type:'bet',stake:curStake}));
+
+    switch(gameSel.value){
+      case 'wheel': startWheel();   break;
+      case 'apple': prepareApple(); disablePlay('Открой яблочко'); break;
+      case 'crash': startCrash();   disablePlay('Идёт раунд…');    break;
+    }
+  };
+
+  function finishRound(pay,kind){
+    pay = +pay.toFixed(2);
+    balance = +(balance + pay).toFixed(2);
+    drawBalance();
+    tg.sendData(JSON.stringify({type:kind,stake:curStake,payout:pay}));
+    enablePlay();
+  }
 })();

@@ -111,7 +111,20 @@
 
   function startWheel(){ 
     disablePlay('Крутится…');
-    wheel.stopAnimation(false); wheel.rotationAngle=0; wheel.draw();
+    wheel.stopAnimation(false); 
+    wheel.rotationAngle=0; 
+    wheel.draw();
+
+    // Загружаем актуальную конфигурацию перед каждым запуском
+    const { data: cfg } = await supa.from('casino_cfg').select('*').eq('id', 1).single();
+    if (!cfg || !cfg.wheelWeights) {
+      tg.showAlert("Ошибка: не удалось загрузить конфигурацию.");
+      enablePlay();
+      return;
+    }
+
+    CONFIG = cfg;    
+
     const stop = pickByWeight(CONFIG.wheelWeights)+1;
     wheel.animation.stopAngle = wheel.getRandomForSegment(stop);
     wheel.startAnimation();

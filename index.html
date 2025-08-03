@@ -107,70 +107,41 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
+<h3>✨ Lucky Spin ✨</h3>
 
-  <h3>✨ Lucky Spin ✨</h3>
+<select id="gameSelect" class="panel">
+  <option value="wheel">🎡 Колесо</option>
+  <option value="apple">🍏 Apple of Fortune</option>
+  <option value="crash">🚀 Crash</option>
+</select>
 
-  <select id="gameSelect" class="panel">
-    <option value="wheel">🎡 Колесо фортуны</option>
-    <option value="apple">🍏 Apple of Fortune</option>
-    <option value="crash">🚀 Crash</option>
-  </select>
-
-  <!-- ======= игры ======= -->
-
-  <!-- Wheel -->
-  <div id="wheelGame" class="game active panel">
-    <div style="position:relative">
-      <canvas id="canvas" width="320" height="320"></canvas>
-      <div class="pointer"></div>
-    </div>
+<div id="wheelGame"  class="game panel active">
+  <div style="position:relative">
+    <canvas id="canvas" width="320" height="320"></canvas>
+    <div class="pointer"></div>
   </div>
+</div>
 
-   <!-- ===== админ-панель (display:none → покажем только админу) ===== -->
-  <div id="settingsPanel" class="panel" style="display:none;flex-direction:column;gap:14px;max-width:340px">
-    <b>⚙️ Настройки (видит только админ)</b>
+<div id="appleGame" class="game panel">
+  <div>Червяки: <select id="bombPick"></select></div>
+  <div id="appleField"></div>
+  <button id="appleCashBtn" class="btn" style="display:none">Забрать ×1.00</button>
+</div>
 
-    <label>Вес сектора 55×: <input id="w55" type="number" min="1" value="1"></label>
-    <label>Доп. червяков (appleRig): <input id="rig" type="number" min="0" value="3"></label>
-    <label>Crash max X: <input id="cmax" type="number" step="0.1" value="5"></label>
+<div id="crashGame" class="game panel">
+  <div id="crashScreen">x1.00</div>
+  <button id="crashCashBtn" class="btn" style="display:none">Забрать</button>
+</div>
 
-    <button id="saveBtn" class="btn">💾 Сохранить</button>
-    <span id="saveStatus" style="font-size:14px;color:#0f0;display:none">Сохранено ✓</span>
-  </div>
+<div id="infoWrap" class="panel">
+  Баланс: <span id="balance">0.00</span> 🪙 | 
+  Ставка: <input id="stakeInput" type="number" min="1" value="1" style="width:70px"> 🪙
+</div>
 
-  <!-- Apple of Fortune -->
-  <div id="appleGame" class="game panel">
-    <div>Червяки:
-      <select id="bombPick"></select>
-    </div>
-    <div id="appleField"></div>
-    <button id="appleCashBtn" class="btn" style="display:none">Забрать ×1.00</button>
-  </div>
+<button id="actionBtn" class="btn">Играть!</button>
 
-  <!-- Crash -->
-  <div id="crashGame" class="game panel">
-    <div id="crashScreen">x1.00</div>
-    <button id="crashCashBtn" class="btn" style="display:none">Забрать x1.00</button>
-  </div>
-
-  <!-- баланс / ставка -->
-  <div id="infoWrap">
-    <div id="balance">Баланс: … 🪙</div>
-    <div id="stakeWrap">
-      Ставка:
-      <span class="stakeBox">
-        <span class="stakeBtn" id="minusStake">−</span>
-        <input id="stakeInput" type="number" min="1" value="1" step="1">
-        <span class="stakeBtn" id="plusStake">+</span>
-      </span> 🪙
-    </div>
-  </div>
-
-  <button id="actionBtn" class="btn">Играть!</button>
-
-  <!-- скрипты -->
-  <script src="gsap.min.js"></script>
-  <script src="winwheel.min.js"></script>
-  <script src="app.js?v=11"></script>
+<script src="gsap.min.js"></script>
+<script src="winwheel.min.js"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>

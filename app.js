@@ -61,9 +61,9 @@
       o.textContent=i;
       bombSel.appendChild(o);
     }
+    bombSel.value=5;
   }
   
-  bombSel.value=5;
 
   /* ---------- crash ---------- */
   const crashScr=$('#crashScreen'),crashBtn=$('#crashCashBtn');

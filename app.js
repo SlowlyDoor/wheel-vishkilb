@@ -153,7 +153,7 @@
   cashBtn.onclick=_=>{
     if(appleOver) return;
     balance+=curStake*appleMul; drawBalance();
-    bombsShow.forEach(i=>{cells[i].classList.add('open');cells[i].textContent='🐛';});
+    bombsShow.forEach(i=>{cells[i].classList.add('open');cells[i].innerHTML='<span>🐛</span>';});
     appleGameEnd(); finishRound(0,'appleWin');
   };
   const appleGameEnd=_=>{appleOver=true; field.classList.add('blocked'); cashBtn.style.display='none';};

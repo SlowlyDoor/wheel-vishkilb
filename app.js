@@ -260,11 +260,6 @@
     payout: payout
   });
 
-  // 2. Вручную обновить баланс
-  await supa.from('users')
-    .update({ balance: balance + payout - curStake })
-    .eq('telegram_id', uid);
-
   // 3. Перечитать актуальный баланс
   const { data: u } = await supa
     .from('users')

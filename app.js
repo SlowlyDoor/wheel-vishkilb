@@ -10,6 +10,7 @@
            : {wheelWeights:[200,50,200,40,200,30,5,1],appleRig:3,crashMax:5};
 
   const $=id=>document.getElementById(id);
+  const sel = id => document.getElementById(id);
 
   /* баланс / ставка */
   let balance=+url.searchParams.get('bal')||0;
@@ -18,12 +19,15 @@
   const draw  = () => { if (balEl) balEl.textContent = fmt(balance); };
   draw();
 
-  /* ----- выбор игры ----- */
-  const views={wheel:$('#wheelGame'),apple:$('#appleGame'),crash:$('#crashGame')};
-  $('#gameSelect').onchange=e=>{
-    Object.values(views).forEach(v=>v.classList.remove('active'));
-    views[e.target.value].classList.add('active');
-  };
+  /* ---------- выбор игры ---------- */
+  const sel = $('#gameSelect');
+  if (sel) {
+    const views = {wheel:$('#wheelGame'), apple:$('#appleGame'), crash:$('#crashGame')};
+    sel.onchange = e => {
+      Object.values(views).forEach(v => v?.classList.remove('active'));
+      views[e.target.value]?.classList.add('active');
+    };
+  }
 
   /* ---------- wheel ---------- */
   const labels=['0×','2×','0×','5×','0×','3×','10×','55×'],

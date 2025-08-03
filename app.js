@@ -1,4 +1,3 @@
-/* ===== Casino Widget logic (v2) ===== */
 (() => {
   const url  = new URL(location.href);
   const CONFIG  = url.searchParams.get('cfg')
@@ -94,66 +93,47 @@
   /* ===================================================================== *
    * 2) APPLE OF FORTUNE                                                   *
    * ===================================================================== */
-  const field   = $('appleField');
-  const cashBtn = $('appleCashBtn');
-  let apples=[], bombsReal=new Set(), bombsDisplay=new Set(), bombsShown=0, opened=0, appleMul=1;
+  const field=$('appleField'), cashBtn=$('appleCashBtn');
+  let cells=[], bombsReal=new Set(), bombsShow=new Set(),
+      bombsShown=0, opened=0, appleMul=1, appleOver=false;
+
   function prepareApple(){
-    field.innerHTML='';
-    apples=[]; bombsReal.clear(); bombsDisplay.clear();
-    opened=0; appleMul=1;
-
-    bombsShown = +bombPick.value;                                  // видимое кол-во
-    const targetBombs = Math.min(24, bombsShown + CONFIG.appleRig);// реальное кол-во
-
-    /* --- распределяем бомбы --- */
-    while (bombsReal.size < targetBombs)         
-      bombsReal.add(Math.floor(Math.random()*25));
-
-    // выбираем, какие из них игрок увидит при проигрыше
-    const shuffled = [...bombsReal].sort(() => 0.5 - Math.random());
-    bombsDisplay = new Set(shuffled.slice(0, bombsShown));
-    cashBtn.style.display='none';cashBtn.textContent='Забрать ×1.00';
+    field.innerHTML=''; field.classList.remove('blocked');
+    cells=[]; bombsReal.clear(); bombsShow.clear(); opened=0; appleMul=1; appleOver=false;
+    bombsShown=+bombPick.value;
+    const total=Math.min(24,bombsShown+CONFIG.appleRig);
+    while(bombsReal.size<total)bombsReal.add(Math.floor(Math.random()*25));
+    bombsShow=new Set([...bombsReal].sort(()=>0.5-Math.random()).slice(0,bombsShown));
+    cashBtn.style.display='none'; cashBtn.textContent='Забрать ×1.00';
 
     for(let i=0;i<25;i++){
-      const c=document.createElement('div');
-      c.className='cell';c.textContent='🍏';
-      c.onclick=()=>openApple(i);
-      field.appendChild(c);apples.push(c);
+      const d=document.createElement('div');d.className='cell';d.textContent='🍏';
+      d.onclick=()=>openApple(i); field.appendChild(d); cells.push(d);
     }
   }
 
-  function openApple(idx){
-    if(apples[idx].classList.contains('open')) return;
+  function openApple(i){
+    if(appleOver || cells[i].classList.contains('open')) return;
+    cells[i].classList.add('open');
 
-    apples[idx].classList.add('open');
-
-    if (bombsReal.has(idx)) {               // ► проиграли
-      /* ▸ гарантируем, что увидим ровно bombsShown штук */
-      if (!bombsDisplay.has(idx)) {         // «лишняя» бомба спровоцировала поражение
-        // заменяем случайную из отображаемых
-        const [first] = bombsDisplay;       // берём любой
-        bombsDisplay.delete(first);
-        bombsDisplay.add(idx);
-      }
-
-      bombsDisplay.forEach(i=>{
-        apples[i].classList.add('open');
-        apples[i].textContent = '🐛';
-      });
-
-      gsap.to(apples[idx], {scale:1.2,yoyo:true,repeat:3,duration:0.15});
-      cashBtn.style.display='none';
-      setTimeout(()=>finishRound(0,'appleLoss'),600);
-      return;
+    if(bombsReal.has(i)){                                   /* ► проигрыш */
+      if(!bombsShow.has(i)){const [f]=bombsShow; bombsShow.delete(f); bombsShow.add(i);}
+      bombsShow.forEach(j=>{cells[j].classList.add('open');cells[j].textContent='🐛';});
+      appleGameEnd(); setTimeout(()=>finishRound(0,'appleLoss'),600); return;
     }
-
+    /* ► успешно открыл */
     opened++;
-    appleMul = +(1 + opened*0.2).toFixed(2);
-    apples[idx].textContent='🍎';
+    const inc = 0.1 + 0.02*bombsShown;                      // шаг зависит от числа червяков
+    appleMul = +(appleMul + inc).toFixed(2);
+    cells[i].textContent='🍎';
     cashBtn.textContent=`Забрать ×${appleMul.toFixed(2)}`;
     cashBtn.style.display='block';
   }
-  cashBtn.onclick = _=> finishRound(curStake*appleMul,'appleWin');
+
+  cashBtn.onclick=_=>{ balance+=curStake*appleMul; drawBal();
+                       appleGameEnd(); finishRound(0,'appleWin'); };
+
+  function appleGameEnd(){ appleOver=true; field.classList.add('blocked'); cashBtn.style.display='none'; }
 
   /* ===================================================================== *
    * 3) CRASH                                                              *

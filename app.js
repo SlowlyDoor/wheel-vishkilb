@@ -108,7 +108,7 @@
 
   function startWheel(){ disablePlay('Крутится…');
     wheel.stopAnimation(false); wheel.rotationAngle=0; wheel.draw();
-    const stop = pickByWeight(CONFIG.wheel_weights)+1;
+    const stop = pickByWeight(CONFIG.wheelWeights)+1;
     wheel.animation.stopAngle = wheel.getRandomForSegment(stop);
     wheel.startAnimation();
   }

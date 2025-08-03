@@ -109,26 +109,35 @@
   (()=>{const c=$('canvas').getContext('2d');c.fillStyle='#ffea00';
         c.beginPath();c.moveTo(138,8);c.lineTo(142,8);c.lineTo(140,26);c.fill();})();
 
-  function startWheel(){ 
+  const startWheel = async () => {
     disablePlay('Крутится…');
-    wheel.stopAnimation(false); 
-    wheel.rotationAngle=0; 
+    wheel.stopAnimation(false);
+    wheel.rotationAngle = 0;
     wheel.draw();
 
-    // Загружаем актуальную конфигурацию перед каждым запуском
-    const { data: cfg } = await supa.from('casino_cfg').select('*').eq('id', 1).single();
-    if (!cfg || !cfg.wheelWeights) {
-      tg.showAlert("Ошибка: не удалось загрузить конфигурацию.");
+    try {
+      const { data: cfg, error } = await supa
+        .from('casino_cfg')
+        .select('*')
+        .eq('id', 1)
+        .single();
+
+      if (error || !cfg || !cfg.wheelWeights) {
+        tg.showAlert("Ошибка: не удалось загрузить конфигурацию.");
+        enablePlay();
+        return;
+      }
+
+      CONFIG = cfg;
+      const stop = pickByWeight(CONFIG.wheelWeights) + 1;
+      wheel.animation.stopAngle = wheel.getRandomForSegment(stop);
+      wheel.startAnimation();
+    } catch (e) {
+      tg.showAlert("Ошибка соединения.");
       enablePlay();
-      return;
     }
+  };
 
-    CONFIG = cfg;    
-
-    const stop = pickByWeight(CONFIG.wheelWeights)+1;
-    wheel.animation.stopAngle = wheel.getRandomForSegment(stop);
-    wheel.startAnimation();
-  }
 
   /* ===================================================================== *
    * 2) APPLE OF FORTUNE                                                   *

@@ -27,7 +27,6 @@
   bombPick.value = 5;            // дефолт
 
   /* ---------- URL-params ---------- */
-  const url       = new URL(location.href);
   let   balance   = +url.searchParams.get('bal')  || 0;
   const baseCost  = +url.searchParams.get('cost') || 1;
 

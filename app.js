@@ -80,8 +80,17 @@
         mult  =[0,2,0,5,0,3,10,55],
         colors=['#d400ff','#ffea00','#d400ff','#ffea00','#d400ff','#ffea00','#d400ff','#ffea00'];
 
-  const pickByWeight=w=>{let s=w.reduce((a,b)=>a+b,0),r=Math.random()*s,a=0;
-                         for(let i=0;i<w.length;i++){a+=w[i];if(r<a)return i;}return 7;};
+  const pickByWeight = w => {
+    let s = w.reduce((a,b) => a + b ,0), 
+        r = Math.random()*s,
+        a = 0;
+        for(let i=0;i<w.length;i++) {
+          a += w[i];
+          if (r < a)
+            return i;
+        }
+        return 7;
+      };
 
   const wheel=new Winwheel({
     canvasId:'canvas',numSegments:8,outerRadius:140,
@@ -99,7 +108,7 @@
 
   function startWheel(){ disablePlay('Крутится…');
     wheel.stopAnimation(false); wheel.rotationAngle=0; wheel.draw();
-    const stop = pickByWeight(CONFIG.wheelWeights)+1;
+    const stop = pickByWeight(CONFIG.wheel_weights)+1;
     wheel.animation.stopAngle = wheel.getRandomForSegment(stop);
     wheel.startAnimation();
   }

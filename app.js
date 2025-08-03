@@ -32,8 +32,8 @@
   /* инициализация */
   (async () => {
     const [{ data: user }, { data: cfg }] = await Promise.all([
-       supa.from('users').select('balance').eq('id', uid).single(),
-       supa.from('casino_cfg').select('*').eq('id', 1).single()
+       supa.from('users').select('balance').eq('telegram_id', uid).single(),
+       supa.from('casino_cfg').select('*').eq('telegram_id', 1).single()
     ]);
     balance = user ? +user.balance : 0;
     CONFIG  = cfg;
@@ -41,7 +41,7 @@
   })();
 
   supa.channel('bal_' + uid)
-    .on('postgres_changes',{event:'UPDATE',table:'users',filter:`id=eq.${uid}`},
+    .on('postgres_changes',{event:'UPDATE',table:'users',filter:`telegram_id=eq.${uid}`},
        payload => { balance = +payload.new.balance; drawBalance(); })
     .subscribe();
 

@@ -1,18 +1,8 @@
 /* ===== Lucky Spin widget – full bundle (v17) ===== */
 (() => {
   /* ---------- cfg из URL ---------- */
-  const url = new URL(location.href);
-  const cfgParam = url.searchParams.get('cfg');
-  const DEF = {
-    wheelWeights:[200,50,200,40,200,30,5,1],
-    appleRig:3,
-    crashMin:1.5, crashMax:5, crashStep:0.05, crashInterval:200, crashZeroProb:0.05
-  };
-  const CONFIG = cfgParam
-        ? {...DEF, ...JSON.parse(atob(cfgParam.replace(/-/g,'+').replace(/_/g,'/')
-                 .padEnd(cfgParam.length+(4-cfgParam.length%4)%4,'=')))}
-        : DEF;
-
+  const uid = new URL(location.href).searchParams.get('uid');
+  let balance = 0, CONFIG = {};
   /* ---------- Telegram helpers ---------- */
   const tg = window.Telegram?.WebApp || {expand(){},ready(){},sendData:console.log,showAlert:alert};
   tg.expand(); tg.ready();
@@ -34,13 +24,26 @@
 
   const bombPick  = $('bombPick');
 
+  /* инициализация */
+  (async () => {
+    const [{ data: user }, { data: cfg }] = await Promise.all([
+       supa.from('users').select('balance').eq('id', uid).single(),
+       supa.from('casino_cfg').select('*').eq('id', 1).single()
+    ]);
+    balance = user ? +user.balance : 0;
+    CONFIG  = cfg;
+    drawBalance();
+  })();
+
+  supa.channel('bal_' + uid)
+    .on('postgres_changes',{event:'UPDATE',table:'users',filter:`id=eq.${uid}`},
+       payload => { balance = +payload.new.balance; drawBalance(); })
+    .subscribe();
+
+
   /* ---------- заполнение селектов ---------- */
   for(let i=1;i<=20;i++){ const o=document.createElement('option');o.value=i;o.textContent=i;bombPick.appendChild(o);}
   bombPick.value=5;
-
-  /* ---------- URL-параметры ---------- */
-  let   balance  = +url.searchParams.get('bal')  || 0;
-  const baseCost = +url.searchParams.get('cost') || 1;
 
   /* ---------- helpers ---------- */
   const fmt=n=>n.toFixed(2);
@@ -222,5 +225,14 @@
     }
   };
 
-  function finishRound(_,kind){ enablePlay(); tg.sendData(JSON.stringify({type:kind})); }
+  async function finishRound(payout, kind){
+    enablePlay();
+    await supa.from('bets').insert({
+       user_id: uid, game: kind, stake: curStake, payout: payout
+    });
+    // после insert триггер в БД обновит баланс → читаем заново
+    const { data: u } = await supa
+          .from('users').select('balance').eq('id', uid).single();
+    balance = +u.balance; drawBalance();
+  }
 })();

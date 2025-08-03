@@ -250,25 +250,27 @@
   };
 
   async function finishRound(payout, kind) {
-    enablePlay();
+  enablePlay();
 
-    // 1. Сохраняем ставку (user_id, game, stake, payout)
-    await supa.from('bets').insert({
-        "user_id": uid,
-        game: kind,
-        stake: curStake,
-        payout: payout
-    });
+  const stake = curStake;
+  const delta = payout - stake;
 
-    // 2. Баланс пересчитается через триггер (см. ниже), остаётся только перечитать:
-    const { data: u } = await supa
-        .from('users')
-        .select('balance')
-        .eq('telegram_id', uid)
-        .single();
+  // Обновляем баланс напрямую
+  const { data: userBefore } = await supa
+    .from("users")
+    .select("balance")
+    .eq("telegram_id", uid)
+    .single();
 
-    balance = +u.balance;
-    drawBalance();
+  const newBalance = userBefore.balance + delta;
+
+  await supa
+    .from("users")
+    .update({ balance: newBalance })
+    .eq("telegram_id", uid);
+
+  balance = newBalance;
+  drawBalance();
 }
 
 })();

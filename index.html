@@ -1,161 +1,139 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Casino Widget</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
-  <!-- шрифт -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<title>Lucky Spin</title>
 
-  <style>
-    /* ===== базовый фон / текст ===== */
-    html,body{height:100%;margin:0;font-family:'Roboto',sans-serif}
-    body{
-      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
-      background:#11082b;overflow:hidden;color:#eee;
-      background-image:
-        radial-gradient(circle at 50% 30%,rgba(255,255,255,.05) 0%,transparent 60%),
-        radial-gradient(circle at 50% 130%,rgba(255,0,140,.25) 0%,transparent 60%);
-    }
-    h3{font-size:26px;font-weight:700;text-shadow:0 0 10px #fff}
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* -------- базовый фон / текст -------- */
+html,body{height:100%;margin:0;font-family:Roboto,sans-serif}
+body{
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  gap:18px;padding:16px;
+  background:#11082b;color:#eee;overflow-x:hidden;
+  background-image:
+     radial-gradient(circle at 50% 30%,rgba(255,255,255,.05) 0%,transparent 60%),
+     radial-gradient(circle at 50% 130%,rgba(255,0,140,.25) 0%,transparent 60%);
+}
+h3{font-size:24px;font-weight:700;margin:0;text-shadow:0 0 10px #fff}
+@media (max-width:420px){h3{font-size:20px}}
 
-    /* ===== универсальная «стеклянная» панель ===== */
-    .panel{
-      background:rgba(255,255,255,.04);backdrop-filter:blur(4px);
-      border:1px solid rgba(255,255,255,.06);border-radius:18px;
-      padding:24px 28px;box-shadow:0 0 20px #000a,0 0 40px #0005 inset;
-    }
+/* -------- панель / карта -------- */
+.panel{
+  background:rgba(255,255,255,.04);backdrop-filter:blur(3px);
+  border:1px solid rgba(255,255,255,.06);border-radius:16px;
+  padding:20px;box-shadow:0 0 18px #000a,0 0 30px #0005 inset;
+  max-width:340px;width:100%;
+}
+@media (max-width:420px){.panel{padding:16px}}
 
-    /* ===== селектор игры ===== */
-    #gameSelect{
-      appearance:none;cursor:pointer;font-size:18px;font-weight:700;color:#ffea00;
-      background:#190f3d;border:2px solid #ffea00;border-radius:12px;
-      padding:10px 44px 10px 16px;box-shadow:0 0 12px #ffea00,0 0 16px #fbc02d inset;
-    }
-    .blocked .cell{pointer-events:none;opacity:.4}
+/* -------- селектор игры -------- */
+#gameSelect{
+  width:100%;appearance:none;cursor:pointer;
+  font-size:16px;font-weight:700;color:#ffea00;
+  background:#190f3d;border:2px solid #ffea00;border-radius:12px;
+  padding:10px 14px;
+  box-shadow:0 0 10px #ffea00,0 0 12px #fbc02d inset;
+}
 
-    /* ===== кнопки ===== */
-    .btn{
-      background:#d400ff;border:none;border-radius:50px;padding:14px 60px;
-      font-size:22px;font-weight:700;color:#fff;cursor:pointer;
-      text-shadow:0 0 6px #fff;box-shadow:0 0 12px #d400ff,0 0 20px #d400ff inset;
-      transition:transform .1s;
-    }
-    .btn:active{transform:scale(.95)}
+/* -------- кнопки -------- */
+.btn{
+  display:flex;justify-content:center;align-items:center;
+  background:#d400ff;border:none;border-radius:50px;
+  padding:14px 0;font-size:18px;font-weight:700;color:#fff;
+  width:100%;max-width:340px;cursor:pointer;
+  box-shadow:0 0 10px #d400ff,0 0 18px #d400ff inset;
+  transition:transform .1s;
+}
+.btn:active{transform:scale(.97)}
+@media (max-width:420px){.btn{font-size:16px;padding:12px 0}}
 
-    /* ===== блок баланса / ставки ===== */
-    #infoWrap{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
-    #balance,#stakeWrap{font-size:18px;color:#ffea00;text-shadow:0 0 6px #ffea00}
+/* -------- ставки / баланс -------- */
+#infoWrap{max-width:340px;width:100%;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between}
+#balance,#stakeWrap{font-size:16px;color:#ffea00;text-shadow:0 0 6px #ffea00}
+.stakeBox{display:inline-flex;align-items:center;border:2px solid #ffea00;border-radius:10px;background:#190f3d}
+#stakeInput{width:56px;padding:6px 0;font-size:16px;text-align:center;background:none;border:none;color:#ffea00;outline:none}
+.stakeBtn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-weight:700;background:#ffea00;color:#190f3d;cursor:pointer}
+.stakeBtn:active{filter:brightness(.9)}
 
-    /* поле ставки с +/- */
-    .stakeBox{
-      display:inline-flex;align-items:center;border:2px solid #ffea00;
-      border-radius:12px;overflow:hidden;background:#190f3d;
-    }
-    #stakeInput{
-      width:60px;padding:6px 8px;font-size:18px;font-weight:700;text-align:center;
-      background:none;border:none;color:#ffea00;outline:none;
-    }
-    .stakeBtn{
-      width:36px;height:36px;display:flex;align-items:center;justify-content:center;
-      cursor:pointer;background:#ffea00;color:#190f3d;font-weight:700;font-size:20px;
-      user-select:none;
-    }
-    .stakeBtn:active{filter:brightness(.9)}
+/* -------- контейнеры игр -------- */
+.game{display:none;flex-direction:column;align-items:center;gap:16px;width:100%}
+.game.active{display:flex}
 
-    /* ===== контейнеры игр ===== */
-    .game{display:none;flex-direction:column;align-items:center;gap:20px}
-    .game.active{display:flex}
+/* ---------- Wheel ---------- */
+#canvas{background:#000;border-radius:50%;box-shadow:0 0 22px #ffea00 inset,0 0 26px #d400ff;width:280px;height:280px}
+.pointer{position:absolute;left:50%;top:-16px;transform:translateX(-50%);
+         width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:24px solid #ffea00;
+         filter:drop-shadow(0 0 6px #ffea00);}
 
-    /* ---------- Wheel ---------- */
-    #canvas{background:#000;border-radius:50%;box-shadow:0 0 25px #ffea00 inset,0 0 30px #d400ff}
-    .pointer{
-      position:absolute;left:50%;top:-18px;transform:translateX(-50%);
-      width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;
-      border-top:28px solid #ffea00;filter:drop-shadow(0 0 6px #ffea00);
-    }
+/* ---------- Apple ---------- */
+#appleField{display:grid;grid-template-columns:repeat(5,52px);gap:8px}
+.cell{width:52px;height:52px;font-size:34px;border-radius:12px;background:#190f3d;box-shadow:0 0 3px #ffea00 inset;cursor:pointer}
+.cell.open{cursor:default}
+#bombPick{appearance:none;background:#190f3d;border:2px solid #ffea00;border-radius:10px;color:#ffea00;font-weight:700;padding:4px 8px;margin-left:6px;cursor:pointer}
 
-    /* ---------- Apple of Fortune ---------- */
-    #appleField{display:grid;grid-template-columns:repeat(5,60px);gap:10px}
-    .cell{
-      width:60px;height:60px;display:flex;align-items:center;justify-content:center;
-      font-size:38px;border-radius:14px;cursor:pointer;
-      background:#190f3d;box-shadow:0 0 4px #ffea00 inset;
-    }
-    .cell.open{cursor:default}
+/* ---------- Crash ---------- */
+#crashScreen{font-size:40px;font-weight:700;color:#ffea00;text-shadow:0 0 12px #ffea00}
 
-    #bombPick{
-      appearance:none;background:#190f3d;border:2px solid #ffea00;border-radius:12px;
-      color:#ffea00;font-weight:700;padding:6px 10px;margin-left:6px;cursor:pointer;
-    }
-
-    /* ---------- Crash ---------- */
-    #crashScreen{font-size:48px;font-weight:700;color:#ffea00;text-shadow:0 0 12px #ffea00}
-
-    /* ---------- Панель подкрутки ---------- */
-    #adminPanel select{
-      appearance:none;background:#190f3d;border:2px solid #ffea00;border-radius:10px;
-      color:#ffea00;font-weight:700;padding:6px 10px;cursor:pointer;
-    }
-  </style>
-
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+/* ---------- заблокированное поле ---------- */
+.blocked .cell{pointer-events:none;opacity:.45}
+</style>
 </head>
 <body>
 
-  <h3>✨ Lucky Spin ✨</h3>
+<h3>✨ Lucky Spin ✨</h3>
 
-  <select id="gameSelect" class="panel">
-    <option value="wheel">🎡 Колесо фортуны</option>
-    <option value="apple">🍏 Apple of Fortune</option>
-    <option value="crash">🚀 Crash</option>
-  </select>
+<select id="gameSelect" class="panel">
+  <option value="wheel">🎡 Колесо</option>
+  <option value="apple">🍏 Apple of Fortune</option>
+  <option value="crash">🚀 Crash</option>
+</select>
 
-  <!-- ======= игры ======= -->
+<!-- Wheel -->
+<div id="wheelGame" class="game active panel">
+  <div style="position:relative"><canvas id="canvas" width="280" height="280"></canvas><div class="pointer"></div></div>
+</div>
 
-  <!-- Wheel -->
-  <div id="wheelGame" class="game active panel">
-    <div style="position:relative">
-      <canvas id="canvas" width="320" height="320"></canvas>
-      <div class="pointer"></div>
-    </div>
+<!-- Apple -->
+<div id="appleGame" class="game panel">
+  <div>Червяки: <select id="bombPick"></select></div>
+  <div id="appleField"></div>
+  <button id="appleCashBtn" class="btn" style="display:none">Забрать ×1.00</button>
+</div>
+
+<!-- Crash -->
+<div id="crashGame" class="game panel">
+  <div id="crashScreen">x1.00</div>
+  <button id="crashCashBtn" class="btn" style="display:none">Забрать</button>
+</div>
+
+<!-- баланс / ставка -->
+<div id="infoWrap">
+  <div id="balance">Баланс: … 🪙</div>
+  <div id="stakeWrap">Ставка:
+    <span class="stakeBox">
+      <span class="stakeBtn" id="minusStake">−</span>
+      <input id="stakeInput" …>
+      <span class="stakeBtn" id="plusStake">+</span>
+    </span> 🪙
   </div>
-
-  <!-- Apple of Fortune -->
-  <div id="appleGame" class="game panel">
-    <div>Червяки:
-      <select id="bombPick"></select>
-    </div>
-    <div id="appleField"></div>
-    <button id="appleCashBtn" class="btn" style="display:none">Забрать ×1.00</button>
+  <div id="stakeOps" style="display:flex;gap:6px;margin-top:10px">
+    <button class="stakeBtn" id="stakeMin" style="flex:1">min</button>
+    <button class="stakeBtn" id="stakeDiv2" style="flex:1">½</button>
+    <button class="stakeBtn" id="stakeSub1" style="flex:1">−1</button>
+    <button class="stakeBtn" id="stakeAdd1" style="flex:1">+1</button>
+    <button class="stakeBtn" id="stakeMul2" style="flex:1">×2</button>
+    <button class="stakeBtn" id="stakeMax" style="flex:1">max</button>
   </div>
+</div>
 
-  <!-- Crash -->
-  <div id="crashGame" class="game panel">
-    <div id="crashScreen">x1.00</div>
-    <button id="crashCashBtn" class="btn" style="display:none">Забрать x1.00</button>
-  </div>
+<button id="actionBtn" class="btn">Играть!</button>
 
-  <!-- баланс / ставка -->
-  <div id="infoWrap">
-    <div id="balance">Баланс: … 🪙</div>
-    <div id="stakeWrap">
-      Ставка:
-      <span class="stakeBox">
-        <span class="stakeBtn" id="minusStake">−</span>
-        <input id="stakeInput" type="number" min="1" value="1" step="1">
-        <span class="stakeBtn" id="plusStake">+</span>
-      </span> 🪙
-    </div>
-  </div>
-
-  <button id="actionBtn" class="btn">Играть!</button>
-
-  <!-- скрипты -->
-  <script src="gsap.min.js"></script>
-  <script src="winwheel.min.js"></script>
-  <script src="app.js?v=11"></script>
+<script src="gsap.min.js"></script>
+<script src="winwheel.min.js"></script>
+<script src="app.js?v=16"></script>
 </body>
 </html>

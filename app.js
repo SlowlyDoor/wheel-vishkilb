@@ -96,17 +96,21 @@
     canvasId:'canvas',numSegments:8,outerRadius:140,
     textFontSize:20,textFillStyle:'#fff',
     segments:labels.map((t,i)=>({text:t,fillStyle:colors[i]})),
-    animation:{type:'spinToStop',duration:8,spins:7,callbackFinished:() => {
+    animation:{type:'spinToStop',duration:8,spins:7,
+    callbackFinished:() => {
     const idx = wheel.getIndicatedSegmentNumber() - 1;   // 0..7
-    balance += mult[idx] * curStake;
+    const win = mult[idx] * curStake;
+    balance += win;
     drawBalance();
     enablePlay();
+    finishRound(win, 'wheel'); 
   }}
   });
   (()=>{const c=$('canvas').getContext('2d');c.fillStyle='#ffea00';
         c.beginPath();c.moveTo(138,8);c.lineTo(142,8);c.lineTo(140,26);c.fill();})();
 
-  function startWheel(){ disablePlay('Крутится…');
+  function startWheel(){ 
+    disablePlay('Крутится…');
     wheel.stopAnimation(false); wheel.rotationAngle=0; wheel.draw();
     const stop = pickByWeight(CONFIG.wheelWeights)+1;
     wheel.animation.stopAngle = wheel.getRandomForSegment(stop);
@@ -180,7 +184,8 @@
     if(appleOver) return;
     balance+=curStake*appleMul; drawBalance();
     bombsShow.forEach(i=>{cells[i].classList.add('open');cells[i].innerHTML='<span>🐛</span>';});
-    appleGameEnd(); finishRound(0,'appleWin');
+    appleGameEnd(); 
+    finishRound(curStake * appleMul,'appleWin');
   };
   const appleGameEnd=_=>{appleOver=true; field.classList.add('blocked'); cashBtn.style.display='none';};
 
@@ -220,7 +225,7 @@
   crashBtn.onclick=_=>{
     if(zeroCrash) return;
     clearInterval(crashT); crashBtn.style.display='none';
-    balance+=stake()*crashMul; drawBalance(); finishRound(0,'crashWin');
+    balance+=stake()*crashMul; drawBalance(); finishRound(curStake * crashMul,'crashWin');
   };
 
   /* ===================================================================== *

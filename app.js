@@ -44,6 +44,7 @@
 
   /* ---------- helpers ---------- */
   const fmt=n=>n.toFixed(2);
+  const fmtCoins = n => `${fmt(n)} 🪙`;
   const stake = () => Math.max(1, +stakeInp.value||1)*baseCost;
   const drawBalance = () => balanceEl.textContent = `Баланс: ${isNaN(balance)?'…':fmt(balance)} 🪙`;
   const setStake = v => { stakeInp.value=Math.max(1,Math.floor(v)); drawBalance(); };
@@ -120,7 +121,7 @@
     while(bombsReal.size<total) bombsReal.add(Math.floor(Math.random()*25));
     bombsShow=new Set([...bombsReal].sort(()=>0.5-Math.random()).slice(0,bombsShown));
 
-    cashBtn.style.display='none'; cashBtn.textContent='Забрать ×1.00';
+    cashBtn.style.display='none'; cashBtn.textContent=`Забрать ${fmtCoins(curStake)}`;
     for(let i=0;i<25;i++){
       const d=document.createElement('div');
       d.className='cell';
@@ -142,7 +143,7 @@
     const inc=0.1+0.02*bombsShown;              /* множитель зависит от червяков */
     appleMul=+(appleMul+inc).toFixed(2);
     cells[i].innerHTML='<span>🍎</span>';
-    cashBtn.textContent=`Забрать ×${appleMul.toFixed(2)}`;
+    cashBtn.textContent=`Забрать ${fmtCoins(curStake * appleMul)}`;
     cashBtn.style.display='block';
   }
 
@@ -171,13 +172,15 @@
     crashMul=1;
     crashLimit=+(CONFIG.crashMin+Math.random()*(CONFIG.crashMax-CONFIG.crashMin)).toFixed(2);
     dec=Math.min(3,Math.max(2,(CONFIG.crashStep.toString().split('.')[1]||'').length));
-    crashScr.textContent=fmtM(crashMul); crashBtn.textContent=`Забрать ${fmtM(crashMul)}`; crashBtn.style.display='block';
+    crashScr.textContent=fmtM(crashMul); 
+    crashBtn.textContent=`Забрать ${fmtCoins(curStake * crashMul)}`;
+    crashBtn.style.display='block';
 
     const factor=1+CONFIG.crashStep;
     crashT=setInterval(()=>{
       crashMul=+(crashMul*factor).toFixed(dec);
       crashScr.textContent=fmtM(crashMul);
-      crashBtn.textContent=`Забрать ${fmtM(crashMul)}`;
+      crashBtn.textContent=`Забрать ${fmtCoins(curStake * crashMul)}`;
       if(crashMul>=crashLimit){
         clearInterval(crashT); crashBtn.style.display='none';
         crashScr.textContent='💥 CRASH'; finishRound(0,'crashLoss');

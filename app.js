@@ -10,8 +10,7 @@
            : {wheelWeights:[200,50,200,40,200,30,5,1],appleRig:3,crashMax:5};
 
   const $=id=>document.getElementById(id);
-  const sel = id => document.getElementById(id);
-
+  
   /* баланс / ставка */
   let balance=+url.searchParams.get('bal')||0;
   const fmt   = n => n.toFixed(2);

@@ -10,7 +10,7 @@
            : {wheelWeights:[200,50,200,40,200,30,5,1],appleRig:3,crashMax:5};
 
   const $=id=>document.getElementById(id);
-  
+
   /* баланс / ставка */
   let balance=+url.searchParams.get('bal')||0;
   const fmt   = n => n.toFixed(2);
@@ -51,8 +51,18 @@
         c.beginPath();c.moveTo(158,8);c.lineTo(162,8);c.lineTo(160,28);c.fill();})();
 
   /* ---------- apple ---------- */
-  const field=$('#appleField'),bombSel=$('#bombPick'),cashBtn=$('#appleCashBtn');
-  for(let i=1;i<=20;i++){const o=document.createElement('option');o.value=i;o.textContent=i;bombSel.appendChild(o);}
+  const field=$('#appleField'),
+        bombSel=$('#bombPick'),
+        cashBtn=$('#appleCashBtn');
+  if (bombSel) {
+    for(let i=1;i<=20;i++) {
+      const o = document.createElement('option');
+      o.value=i;
+      o.textContent=i;
+      bombSel.appendChild(o);
+    }
+  }
+  
   bombSel.value=5;
 
   /* ---------- crash ---------- */

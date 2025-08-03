@@ -70,7 +70,9 @@
 
   /* ---------- play ---------- */
   let bet=1;
-  $('#actionBtn').onclick=()=>{
+  const actionBtn = $('#actionBtn');
+  if (actionBtn) {
+    actionBtn.onclick=()=>{
     bet=+$('#stakeInput').value||1;
     if(balance<bet){tg.showAlert('Недостаточно средств');return;}
     balance-=bet;draw();
@@ -121,4 +123,6 @@
       crashBtn.onclick=()=>{clearInterval(t);balance+=bet*cm;draw();crashBtn.style.display='none';};
     }
   };
+  }
+  
 })();

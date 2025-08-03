@@ -252,9 +252,12 @@
   async function finishRound(payout, kind){
     enablePlay();
     await supa.from('bets').insert({
-       user_id: uid, game: kind, stake: curStake, payout: payout
+       "user_id": uid, game: kind, stake: curStake, payout: payout
     });
     // после insert триггер в БД обновит баланс → читаем заново
+    const { data: u } = await supa
+          .from('users').select('balance').eq('telegram_id', uid).single();
+    balance = +u.balance; 
     drawBalance();
   }
 })();

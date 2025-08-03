@@ -132,7 +132,7 @@
     opened++;
     const inc=0.1+0.02*bombsShown;              /* множитель зависит от червяков */
     appleMul=+(appleMul+inc).toFixed(2);
-    cells[i].textContent='🍎';
+    cells[i].innerHTML='<span>🍎</span>';
     cashBtn.textContent=`Забрать ×${appleMul.toFixed(2)}`;
     cashBtn.style.display='block';
   }

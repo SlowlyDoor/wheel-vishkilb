@@ -3,7 +3,7 @@
 
   const supa = supabase.createClient(
     'https://paervwnoqseumvxmvhru.supabase.co',       
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXJ2d25vcXNldW12eG12aHJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyMjA1MjcsImV4cCI6MjA2OTc5NjUyN30.oLdzNC2UH-LpRlUxgMJNE8mcGADxnUlbe6Hl51U5skY'                        
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXJ2d25vcXNldW12eG12aHJ1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDIyMDUyNywiZXhwIjoyMDY5Nzk2NTI3fQ.4ycLy1DetjmYePpJ3OULWPbk3UKFGcrZXvMN_T5tZBk'
   );
   /* ---------- cfg из URL ---------- */
   const uid = new URL(location.href).searchParams.get('uid');

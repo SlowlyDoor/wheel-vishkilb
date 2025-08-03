@@ -99,131 +99,70 @@
   /* ===================================================================== *
    * 2) APPLE OF FORTUNE                                                   *
    * ===================================================================== */
-  const field   = $('appleField'),
-        cashBtn = $('appleCashBtn');
-
-  let cells      = [],            // div-элементы клеток
-      bombsReal  = new Set(),     // реальные бомбы (🐛)
-      bombsShow  = new Set(),     // какие покажем при проигрыше
-      bombsShown = 0,             // число, выбранное ребёнком
-      opened     = 0,             // сколько уже открыто
-      appleMul   = 1.0,           // текущий множитель
-      appleOver  = false;         // игра закончилась?
+  const field=$('appleField'), cashBtn=$('appleCashBtn');
+  let cells=[], bombsReal=new Set(), bombsShow=new Set(),
+    bombsShown=0, opened=0, appleMul=1, appleOver=false;
 
   /* ---------- превью-поле: просто 25 зелёных яблок ---------- */
-  function drawApplePreview () {
-    field.innerHTML = '';
-    for (let i = 0; i < 25; i++) {
-      const d = document.createElement('div');
-      d.className  = 'cell';
-      d.innerHTML  = '<span>🍏</span>';
+  function drawApplePreview(){
+    field.innerHTML='';
+    for(let i=0;i<25;i++){
+      const d=document.createElement('div');
+      d.className='cell'; d.innerHTML='<span>🍏</span>';
       field.appendChild(d);
     }
     field.classList.add('blocked');        // клики отключены
   }
-  drawApplePreview();                      // ← при загрузке
+  drawApplePreview();                      // ← вызываем один раз при загрузке
 
-  /* ---------- старт раунда ---------- */
-  function prepareApple () {
-    field.innerHTML = '';
-    field.classList.remove('blocked');
 
-    cells     = [];
-    bombsReal.clear();
-    bombsShow.clear();
-    opened    = 0;
-    appleMul  = 1.0;
-    appleOver = false;
+  function prepareApple(){
+    field.innerHTML=''; field.classList.remove('blocked');
+    cells=[]; bombsReal.clear(); bombsShow.clear(); opened=0; appleMul=1; appleOver=false;
 
-    bombsShown = +bombPick.value;                          // видимое кол-во
-    const total = Math.min(24, bombsShown + CONFIG.appleRig);
+    bombsShown=+bombPick.value;
+    const total=Math.min(24,bombsShown+CONFIG.appleRig);
+    while(bombsReal.size<total) bombsReal.add(Math.floor(Math.random()*25));
+    bombsShow=new Set([...bombsReal].sort(()=>0.5-Math.random()).slice(0,bombsShown));
 
-    /* реальные бомбы */
-    while (bombsReal.size < total)
-      bombsReal.add(Math.floor(Math.random() * 25));
-
-    /* какие из них покажем при проигрыше */
-    bombsShow = new Set([...bombsReal].sort(() => 0.5 - Math.random())
-                                     .slice(0, bombsShown));
-
-    cashBtn.style.display  = 'none';
-    cashBtn.textContent    = `Забрать ${fmtCoins(curStake)}`;
-
-    /* поле 5×5 */
-    for (let i = 0; i < 25; i++) {
-      const d   = document.createElement('div');
-      d.className = 'cell';
+    cashBtn.style.display='none'; cashBtn.textContent=`Забрать ${fmtCoins(curStake)}`;
+    for(let i=0;i<25;i++){
+      const d=document.createElement('div');
+      d.className='cell';
       d.innerHTML = '<span>🍏</span>';
-      d.onclick   = () => openApple(i);
-      field.appendChild(d);
-      cells.push(d);
-    }
+      d.onclick=()=>openApple(i); field.appendChild(d); cells.push(d);}
   }
 
-  /* ---------- клик по клетке ---------- */
-  function openApple (idx) {
-    if (appleOver || cells[idx].classList.contains('open')) return;
+  function openApple(i){
+    if(appleOver || cells[i].classList.contains('open')) return;
+    cells[i].classList.add('open');
 
-    cells[idx].classList.add('open');
-
-    /* 🐛 — ПРОИГРЫШ */
-    if (bombsReal.has(idx)) {
-      if (!bombsShow.has(idx)) {                  // «лишняя» бомба
-        const [f] = bombsShow;
-        bombsShow.delete(f);
-        bombsShow.add(idx);
-      }
-      bombsShow.forEach(i => {
-        cells[i].classList.add('open');
-        cells[i].innerHTML = '<span>🐛</span>';
-      });
-      appleGameEnd();
-      setTimeout(() => finishRound(0, 'appleLoss'), 600);
-      return;
+    if(bombsReal.has(i)){                       /* проигрыш */
+      if(!bombsShow.has(i)){const [f]=bombsShow; bombsShow.delete(f); bombsShow.add(i);}
+      bombsShow.forEach(j=>{cells[j].classList.add('open');
+        cells[i].innerHTML = '<span>🐛</span>';});
+      appleGameEnd(); setTimeout(()=>finishRound(0,'appleLoss'),600); return;
     }
-
-    /* 🍏 — УСПЕХ */
     opened++;
-
-    /* ------ новый множитель: честный + маржа --------
-       S — безопасных клеток осталось
-       T — клеток всего осталось
-       p = S / T
-       k0 = 1 / p
-       k  = k0 * (1 - edge)                               */
-    const S    = 25 - bombsReal.size - opened;
-    const T    = 25 - opened;
-    const edge = 0.15;                       // 15 % комиссия казино
-    const factor = (T / S) * (1 - edge);
-
+    /* --- новый “математический” фактор --- */
+    const S   = 25 - bombsReal.size - opened; // безопасно осталось
+    const T   = 25 - opened;                  // всего осталось
+    const p   = S / T;
+    const edge = 0.15;                        // маржа казино (15 %)
+    const factor = (1 / p) * (1 - edge);
     appleMul = +(appleMul * factor).toFixed(2);
-
-    cells[idx].innerHTML = '<span>🍎</span>';
-    cashBtn.textContent  = `Забрать ${fmtCoins(curStake * appleMul)}`;
-    cashBtn.style.display = 'block';
+    cells[i].innerHTML='<span>🍎</span>';
+    cashBtn.textContent=`Забрать ${fmtCoins(curStake * appleMul)}`;
+    cashBtn.style.display='block';
   }
 
-  /* ---------- «Забрать» ---------- */
-  cashBtn.onclick = () => {
-    if (appleOver) return;
-    balance += curStake * appleMul;
-    drawBalance();
-
-    bombsShow.forEach(i => {
-      cells[i].classList.add('open');
-      cells[i].innerHTML = '<span>🐛</span>';
-    });
-
-    appleGameEnd();
-    finishRound(0, 'appleWin');
+  cashBtn.onclick=_=>{
+    if(appleOver) return;
+    balance+=curStake*appleMul; drawBalance();
+    bombsShow.forEach(i=>{cells[i].classList.add('open');cells[i].innerHTML='<span>🐛</span>';});
+    appleGameEnd(); finishRound(0,'appleWin');
   };
-
-  /* ---------- финиш ---------- */
-  const appleGameEnd = () => {
-    appleOver = true;
-    field.classList.add('blocked');
-    cashBtn.style.display = 'none';
-  };
+  const appleGameEnd=_=>{appleOver=true; field.classList.add('blocked'); cashBtn.style.display='none';};
 
   /* ===================================================================== *
    * 3) CRASH                                                              *

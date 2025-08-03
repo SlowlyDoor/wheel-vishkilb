@@ -79,8 +79,12 @@
     canvasId:'canvas',numSegments:8,outerRadius:140,
     textFontSize:20,textFillStyle:'#fff',
     segments:labels.map((t,i)=>({text:t,fillStyle:colors[i]})),
-    animation:{type:'spinToStop',duration:8,spins:7,callbackFinished:seg=>{
-      balance+=mult[seg.text-1]*curStake; drawBalance(); enablePlay();}}
+    animation:{type:'spinToStop',duration:8,spins:7,callbackFinished:() => {
+    const idx = wheel.getIndicatedSegmentNumber() - 1;   // 0..7
+    balance += mult[idx] * curStake;
+    drawBalance();
+    enablePlay();
+  }}
   });
   (()=>{const c=$('canvas').getContext('2d');c.fillStyle='#ffea00';
         c.beginPath();c.moveTo(138,8);c.lineTo(142,8);c.lineTo(140,26);c.fill();})();
@@ -121,7 +125,7 @@
     while(bombsReal.size<total) bombsReal.add(Math.floor(Math.random()*25));
     bombsShow=new Set([...bombsReal].sort(()=>0.5-Math.random()).slice(0,bombsShown));
 
-    cashBtn.style.display='none'; cashBtn.textContent=`Забрать ${fmtCoins(curStake)}`;
+    cashBtn.style.display='none'; cashBtn.textContent=`Забрать ${fmtCoins(curStake * appleMul)}`;
     for(let i=0;i<25;i++){
       const d=document.createElement('div');
       d.className='cell';

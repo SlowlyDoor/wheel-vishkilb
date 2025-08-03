@@ -13,8 +13,9 @@
 
   /* баланс / ставка */
   let balance=+url.searchParams.get('bal')||0;
-  const fmt=n=>n.toFixed(2);
-  const draw=()=>$('#balance').textContent=fmt(balance);
+  const fmt   = n => n.toFixed(2);
+  const balEl = $('#balance');            // ← кэшируем ссылку
+  const draw  = () => { if (balEl) balEl.textContent = fmt(balance); };
   draw();
 
   /* ----- выбор игры ----- */

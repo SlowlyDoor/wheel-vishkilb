@@ -28,7 +28,7 @@
   const maxBtn     = $('stakeMax');
 
   const bombPick  = $('bombPick');
-
+  const baseCost = 1;
   /* инициализация */
   (async () => {
     const [{ data: user }, { data: cfg }] = await Promise.all([
@@ -237,7 +237,7 @@
     });
     // после insert триггер в БД обновит баланс → читаем заново
     const { data: u } = await supa
-          .from('users').select('balance').eq('telegram_id', uid).single();
+          .from('users').select('balance').eq('telegram_idy', uid).single();
     balance = +u.balance; drawBalance();
   }
 })();

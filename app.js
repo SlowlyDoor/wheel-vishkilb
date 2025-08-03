@@ -125,7 +125,7 @@
     while(bombsReal.size<total) bombsReal.add(Math.floor(Math.random()*25));
     bombsShow=new Set([...bombsReal].sort(()=>0.5-Math.random()).slice(0,bombsShown));
 
-    cashBtn.style.display='none'; cashBtn.textContent=`Забрать ${fmtCoins(curStake)}`;
+    cashBtn.style.display='none'; cashBtn.textContent=`Забрать ${fmtCoins(curStake * appleMul)}`;
     for(let i=0;i<25;i++){
       const d=document.createElement('div');
       d.className='cell';
@@ -140,7 +140,7 @@
     if(bombsReal.has(i)){                       /* проигрыш */
       if(!bombsShow.has(i)){const [f]=bombsShow; bombsShow.delete(f); bombsShow.add(i);}
       bombsShow.forEach(j=>{cells[j].classList.add('open');
-        cells[i].innerHTML = '<span>🐛</span>';});
+        cells[j].innerHTML = '<span>🐛</span>';});
       appleGameEnd(); setTimeout(()=>finishRound(0,'appleLoss'),600); return;
     }
     opened++;

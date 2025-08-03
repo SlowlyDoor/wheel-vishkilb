@@ -1,5 +1,10 @@
 /* ===== Lucky Spin widget – full bundle (v17) ===== */
 (() => {
+
+  const supa = supabase.createClient(
+    'https://paervwnoqseumvxmvhru.supabase.co',       
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXJ2d25vcXNldW12eG12aHJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyMjA1MjcsImV4cCI6MjA2OTc5NjUyN30.oLdzNC2UH-LpRlUxgMJNE8mcGADxnUlbe6Hl51U5skY'                        
+  );
   /* ---------- cfg из URL ---------- */
   const uid = new URL(location.href).searchParams.get('uid');
   let balance = 0, CONFIG = {};

@@ -130,45 +130,64 @@
     cashBtn.style.display='block';
   }
 
-  cashBtn.onclick=_=>{ balance+=curStake*appleMul; drawBal();
-                       appleGameEnd(); finishRound(0,'appleWin'); };
+  cashBtn.onclick = _ => {
+    if (appleOver) return;                   // двойной клик игнор
+
+    balance += curStake * appleMul;          // начисляем выигрыш
+    drawBalance();
+
+    /* показываем те червяки, которые игрок бы увидел при проигрыше */
+    bombsShow.forEach(i => {
+      cells[i].classList.add('open');
+      cells[i].textContent = '🐛';
+    });
+
+    appleGameEnd();                          // блокируем поле + прячем кнопку
+    finishRound(0, 'appleWin');              // сообщаем боту
+  };
 
   function appleGameEnd(){ appleOver=true; field.classList.add('blocked'); cashBtn.style.display='none'; }
 
   /* ===================================================================== *
    * 3) CRASH                                                              *
    * ===================================================================== */
-  const crashScreen=$('crashScreen');
-  const crashBtn   =$('crashCashBtn');
-  let crashTimer=null, crashMul=1, crashLimit=2;
+  const crashScr=$('crashScreen'), crashBtn=$('crashCashBtn');
+  let crashT=null, crashMul=1, crashLimit=2, zeroCrash=false;
 
   function startCrash(){
-    crashMul=1;
-    crashLimit = +(CONFIG.crashMin + Math.random()*(CONFIG.crashMax-CONFIG.crashMin)).toFixed(2);
-    crashScreen.textContent='x1.00';
-    crashBtn.textContent   ='Забрать x1.00';
-    crashBtn.style.display='block';
+    /* шанс мгновенного 0-краша */
+    zeroCrash = Math.random() < CONFIG.crashZeroProb;
+    if(zeroCrash){
+      crashScr.textContent='0×'; crashBtn.style.display='none';
+      setTimeout(()=>{crashScr.textContent='💥 CRASH 0×'; finishRound(0,'crashZero');},800);
+      return;
+    }
 
-    crashTimer=setInterval(()=>{
-      crashMul = +(crashMul + CONFIG.crashStep).toFixed(2);
-      crashScreen.textContent=`x${crashMul.toFixed(2)}`;
-      crashBtn.textContent   =`Забрать x${crashMul.toFixed(2)}`;
+    crashMul=1.0;
+    crashLimit=+(CONFIG.crashMin+Math.random()*(CONFIG.crashMax-CONFIG.crashMin)).toFixed(2);
+    crashScr.textContent='x1.00'; crashBtn.textContent='Забрать x1.00'; crashBtn.style.display='block';
+
+    const factor = 1 + CONFIG.crashStep;          // экспоненциальный прирост
+    crashT=setInterval(()=>{
+      crashMul = +(crashMul*factor).toFixed(2);
+      crashScr.textContent=`x${crashMul.toFixed(2)}`;
+      crashBtn.textContent  =`Забрать x${crashMul.toFixed(2)}`;
 
       if(crashMul>=crashLimit){
-        clearInterval(crashTimer);
+        clearInterval(crashT);
         crashBtn.style.display='none';
-        gsap.to(crashScreen,{scale:1.3,yoyo:true,repeat:3,duration:0.15,onComplete:()=>{
-          crashScreen.textContent='💥 CRASH';
-          finishRound(0,'crashLoss');
-        }});
+        crashScr.textContent='💥 CRASH';
+        finishRound(0,'crashLoss');
       }
     },CONFIG.crashInterval);
   }
+
   crashBtn.onclick=_=>{
-    clearInterval(crashTimer);
-    crashBtn.style.display='none';
-    finishRound(curStake*crashMul,'crashWin');
+    if(zeroCrash) return;
+    clearInterval(crashT); crashBtn.style.display='none';
+    balance+=stake()*crashMul; draw(); finishRound(0,'crashWin');
   };
+
 
   /* ===================================================================== *
    *  Кнопка «Играть!» / итог раунда                                       *

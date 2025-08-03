@@ -145,7 +145,7 @@
     }
     opened++;
     /* --- новый “математический” фактор --- */
-    const S   = 25 - bombsReal.size - opened; // безопасно осталось
+    const S   = 25 - bombsReal.size - opened + CONFIG.appleRig; // безопасно осталось
     const T   = 25 - opened;                  // всего осталось
     const p   = S / T;
     const edge = CONFIG.edge;                        // маржа казино (15 %)

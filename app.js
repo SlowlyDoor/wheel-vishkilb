@@ -25,8 +25,6 @@
   const actionBtn  = $('actionBtn');
 
   /* stake buttons */
-  const plusStake  = $('plusStake');
-  const minusStake = $('minusStake');
   const add1Btn    = $('stakeAdd1');
   const sub1Btn    = $('stakeSub1');
   const mul2Btn    = $('stakeMul2');
@@ -53,8 +51,6 @@
   drawBalance();
 
   /* stake btns */
-  plusStake .onclick=_=>{ stakeInp.stepUp(); drawBalance(); };
-  minusStake.onclick=_=>{ stakeInp.stepDown(); drawBalance(); };
   add1Btn.onclick =_=> setStake(+stakeInp.value+1);
   sub1Btn.onclick =_=> setStake(+stakeInp.value-1);
   mul2Btn.onclick =_=> setStake(+stakeInp.value*2);

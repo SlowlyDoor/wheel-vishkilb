@@ -100,7 +100,20 @@
    * ===================================================================== */
   const field=$('appleField'), cashBtn=$('appleCashBtn');
   let cells=[], bombsReal=new Set(), bombsShow=new Set(),
-      bombsShown=0, opened=0, appleMul=1, appleOver=false;
+    bombsShown=0, opened=0, appleMul=1, appleOver=false;
+
+  /* ---------- превью-поле: просто 25 зелёных яблок ---------- */
+  function drawApplePreview(){
+    field.innerHTML='';
+    for(let i=0;i<25;i++){
+      const d=document.createElement('div');
+      d.className='cell'; d.innerHTML='<span>🍏</span>';
+      field.appendChild(d);
+    }
+    field.classList.add('blocked');        // клики отключены
+  }
+  drawApplePreview();                      // ← вызываем один раз при загрузке
+
 
   function prepareApple(){
     field.innerHTML=''; field.classList.remove('blocked');

@@ -148,7 +148,7 @@
     const S   = 25 - bombsReal.size - opened; // безопасно осталось
     const T   = 25 - opened;                  // всего осталось
     const p   = S / T;
-    const edge = 0.15;                        // маржа казино (15 %)
+    const edge = CONFIG.edge;                        // маржа казино (15 %)
     const factor = (1 / p) * (1 - edge);
     appleMul = +(appleMul * factor).toFixed(2);
     cells[i].innerHTML='<span>🍎</span>';
